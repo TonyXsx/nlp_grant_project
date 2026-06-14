@@ -198,6 +198,38 @@ def _try_llm_fallback(input_path: str) -> dict:
         return {}
 
 
+# ──────────────────────────── DeepDOC fallback (PDF/DOCX/PPTX) ───────────────
+
+def _try_deepdoc_pdf(pdf_path: str) -> dict:
+    """DeepDOC PDF pipeline (CV layout + OCR + table + block-concat)."""
+    try:
+        from .deepdoc_fallback import parse_pdf
+        return parse_pdf(pdf_path) or {}
+    except Exception as e:
+        print(f"[all_type_parser] deepdoc PDF fallback failed: {e}")
+        return {}
+
+
+def _try_deepdoc_docx(docx_path: str) -> dict:
+    """DeepDOC DOCX parser (paragraphs + composed table content)."""
+    try:
+        from .deepdoc_fallback import parse_docx
+        return parse_docx(docx_path) or {}
+    except Exception as e:
+        print(f"[all_type_parser] deepdoc DOCX fallback failed: {e}")
+        return {}
+
+
+def _try_deepdoc_pptx(pptx_path: str) -> dict:
+    """DeepDOC PPT parser (per-slide text + tables)."""
+    try:
+        from .deepdoc_fallback import parse_pptx
+        return parse_pptx(pptx_path) or {}
+    except Exception as e:
+        print(f"[all_type_parser] deepdoc PPTX fallback failed: {e}")
+        return {}
+
+
 # ──────────────────────────── public API ─────────────────────────────────────
 
 def parse(input_path: str) -> dict:
@@ -239,10 +271,17 @@ def parse(input_path: str) -> dict:
                 print("[all_type_parser] ✓ RfPB_parser succeeded")
                 return result
 
-            print("[all_type_parser] all PDF parsers returned empty — falling back to LLM")
+            print("[all_type_parser] all PDF parsers returned empty — trying DeepDOC fallback")
 
-        # Stage 4: LLM fallback for all unrecognised PDFs
-        print("[all_type_parser] falling back to LLM parser (glm-ocr + qwen3.5:27b)")
+        # Stage 4: DeepDOC PDF fallback (CV layout + OCR + table + block-concat)
+        print("[all_type_parser] trying DeepDOC PDF fallback")
+        result = _try_deepdoc_pdf(input_path)
+        if not _is_empty(result):
+            print("[all_type_parser] ✓ deepdoc PDF fallback succeeded")
+            return result
+
+        # Stage 5: LLM fallback for all unrecognised PDFs
+        print("[all_type_parser] DeepDOC returned empty — falling back to LLM parser (glm-ocr + qwen3.5:27b)")
         result = _try_llm_fallback(input_path)
         if not _is_empty(result):
             print("[all_type_parser] ✓ llm_fallback_parser succeeded")
@@ -251,21 +290,51 @@ def parse(input_path: str) -> dict:
         return result
 
     elif ext in (".docx", ".doc"):
-        # DOCX: extract raw text with python-docx
+        # Stage 1: fast raw-text extraction with python-docx
         result = _try_docx_parse(input_path)
         if not _is_empty(result) and _total_text_length(result) >= _MIN_CONTENT_CHARS:
             print("[all_type_parser] ✓ docx parsing succeeded")
             return result
 
+        # Stage 2: DeepDOC DOCX parser (richer — composes table content)
+        print("[all_type_parser] docx text sparse/empty — trying DeepDOC DOCX parser")
+        dd_result = _try_deepdoc_docx(input_path)
+        if not _is_empty(dd_result) and _total_text_length(dd_result) >= _MIN_CONTENT_CHARS:
+            print("[all_type_parser] ✓ deepdoc DOCX parser succeeded")
+            return dd_result
+        # Keep whichever non-empty result is richer as a candidate before LLM
+        if _total_text_length(dd_result) > _total_text_length(result):
+            result = dd_result
+
+        # Stage 3: LLM fallback
         if not _is_empty(result):
             print(
-                f"[all_type_parser] docx result too sparse "
+                f"[all_type_parser] docx result still sparse "
                 f"({_total_text_length(result)} chars < {_MIN_CONTENT_CHARS}) "
                 f"— falling back to LLM parser"
             )
         else:
             print("[all_type_parser] docx parsing returned empty — falling back to LLM parser")
 
+        llm_result = _try_llm_fallback(input_path)
+        if not _is_empty(llm_result):
+            print("[all_type_parser] ✓ llm_fallback_parser succeeded")
+            return llm_result
+        if not _is_empty(result):
+            print("[all_type_parser] LLM empty — returning best non-empty docx result")
+            return result
+        print("[all_type_parser] ✗ all parsers returned empty")
+        return result
+
+    elif ext in (".pptx", ".ppt"):
+        # PPTX: DeepDOC PPT parser, then LLM fallback
+        print("[all_type_parser] PowerPoint file — trying DeepDOC PPT parser")
+        result = _try_deepdoc_pptx(input_path)
+        if not _is_empty(result):
+            print("[all_type_parser] ✓ deepdoc PPT parser succeeded")
+            return result
+
+        print("[all_type_parser] DeepDOC PPT empty — falling back to LLM parser")
         result = _try_llm_fallback(input_path)
         if not _is_empty(result):
             print("[all_type_parser] ✓ llm_fallback_parser succeeded")
@@ -296,7 +365,7 @@ def parse_and_save(input_path: str, output_path: Optional[str] = None) -> str:
     return out
 
 
-def parse_folder(folder_path: str, extensions: tuple = (".pdf", ".docx", ".doc")) -> list:
+def parse_folder(folder_path: str, extensions: tuple = (".pdf", ".docx", ".doc", ".pptx", ".ppt")) -> list:
     """
     Parse all supported files in a folder and save each result to json_data/.
     Returns a list of output JSON paths.

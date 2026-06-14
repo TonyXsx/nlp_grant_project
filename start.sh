@@ -25,7 +25,7 @@ if [ ! -f "$VENV_DIR/.deps_installed" ]; then
   echo "[start.sh] installing requirements"
   pip install -r requirements.txt
   python -m spacy download en_core_web_sm || true
-  python -c "import nltk; nltk.download('punkt', quiet=True); nltk.download('punkt_tab', quiet=True)" || true
+  python -c "import nltk; [nltk.download(p, quiet=True) for p in ('punkt','punkt_tab','averaged_perceptron_tagger','averaged_perceptron_tagger_eng')]" || true
   touch "$VENV_DIR/.deps_installed"
 fi
 

@@ -15,3 +15,16 @@ textstat>=0.7
 nltk>=3.8
 requests>=2.31
 hnswlib>=0.8.0
+
+# DeepDOC parsing fallback (vendored from swxy → src/deepdoc_engine/)
+onnxruntime>=1.17
+opencv-python>=4.9
+xgboost>=2.0,<3.1  # <3.1: still loads upstream's legacy-binary updown_concat_xgb.model
+pypdf>=4.0
+python-pptx>=0.6.23
+pyclipper>=1.3
+shapely>=2.0
+tiktoken>=0.6
+huggingface_hub>=0.23
+chardet>=5.2
+six>=1.16
