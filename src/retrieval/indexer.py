@@ -19,11 +19,26 @@ if str(_SRC) not in sys.path:
 
 from deepdoc_engine.rag.nlp.model import generate_embedding, embedding_dim  # noqa: E402
 from deepdoc_engine.rag.utils.inmem_conn import InMemoryConnection  # noqa: E402
+from deepdoc_engine.rag.utils import num_tokens_from_string  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 CURRENT_INDEX = "current_pdf"
 CORPUS_INDEX = "grant_corpus"
+# Problem A: drop tiny fragment chunks (e.g. "2.", "3. Literature") that the
+# chunker leaves behind — they waste a retrieval slot and add noise.
+MIN_INDEX_TOKENS = 5
+
+
+def _indexable_items(pool_lookup: dict[str, dict]) -> dict[str, dict]:
+    """Pool chunks worth indexing for retrieval (drops sub-MIN_INDEX_TOKENS junk)."""
+    out: dict[str, dict] = {}
+    for chunk_id, meta in pool_lookup.items():
+        tok = meta.get("token_count") or num_tokens_from_string(meta.get("text", ""))
+        if tok < MIN_INDEX_TOKENS:
+            continue
+        out[chunk_id] = meta
+    return out
 
 
 def _assemble_docs(pool_lookup: dict[str, dict], embeddings: list, dim: int,
@@ -71,15 +86,16 @@ def build_index_from_pool(pool_lookup: dict[str, dict], doc_id: str = "current",
     pipeline) avoid re-chunking. Returns (connection, index_name, vector_dim).
     """
     conn = InMemoryConnection()
-    if not pool_lookup:
+    items = _indexable_items(pool_lookup)
+    if not items:
         conn.createIdx(index_name)
         return conn, index_name, embedding_dim()
 
-    texts = [meta["text"] for meta in pool_lookup.values()]
+    texts = [meta["text"] for meta in items.values()]
     embeddings = generate_embedding(texts)
     dim = len(embeddings[0]) if embeddings and embeddings[0] is not None else embedding_dim()
 
-    docs = _assemble_docs(pool_lookup, embeddings, dim, doc_id)
+    docs = _assemble_docs(items, embeddings, dim, doc_id)
     conn.createIdx(index_name, vectorSize=dim)
     conn.insert(docs, index_name)
     return conn, index_name, dim
@@ -113,15 +129,15 @@ def _index_labeled_pdfs(es, index_name, directory, success_label):
         try:
             application = parse(str(pdf))
             pool = build_chunk_pool(application)
-            pool_lookup = pool["pool_lookup"]
-            if not pool_lookup:
+            items = _indexable_items(pool["pool_lookup"])
+            if not items:
                 logger.warning("[corpus] %s: empty pool, skipped", app_id)
                 continue
-            texts = [m["text"] for m in pool_lookup.values()]
+            texts = [m["text"] for m in items.values()]
             embeddings = generate_embedding(texts)
             dim = len(embeddings[0]) if embeddings and embeddings[0] is not None else embedding_dim()
             docs = _assemble_docs(
-                pool_lookup, embeddings, dim, doc_id=app_id, kb_id=index_name,
+                items, embeddings, dim, doc_id=app_id, kb_id=index_name,
                 extra={"success_label": success_label}, id_prefix=f"{app_id}__",
             )
             errs = es.insert(docs, index_name)

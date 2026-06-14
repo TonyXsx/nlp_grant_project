@@ -1307,12 +1307,17 @@ def _build_evidence(
         meta = pool_lookup.get(chunk_id)
         if not meta:
             continue
+        # Page numbers (1-based) from DeepDOC layout positions when available
+        # (rule-based parses carry no positions → empty list). No pixel coords.
+        positions = meta.get("position") or []
+        pages = sorted({int(p[0]) for p in positions if p}) if positions else []
         evidence.append({
             "id": chunk_id,
             "section_id": chunk_id,
             "text": meta["text"],
             "section": meta["parser_section"],
             "source_path": meta["source_path"],
+            "pages": pages,
         })
     return evidence
 

@@ -15,6 +15,13 @@ from typing import Any
 
 import requests
 
+# Load a project-local .env (key/backend config) if python-dotenv is available.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent / ".env")
+except Exception:
+    pass
+
 from src.scoring.pipeline import score_application_base
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
@@ -86,6 +93,19 @@ class _Scorer:
         return _extract_message_content(body)
 
 
+def _make_scorer():
+    """Pick the scoring backend from SCORER_BACKEND (default: local Ollama).
+
+    SCORER_BACKEND=deepseek  → DeepSeek (OpenAI-compatible) API, configured via
+    DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL (see .env).
+    """
+    backend = os.environ.get("SCORER_BACKEND", "ollama").lower()
+    if backend in ("deepseek", "api", "openai"):
+        from src.scoring.api_scorer import DeepSeekScorer
+        return DeepSeekScorer()
+    return _Scorer(model_name=OLLAMA_MODEL, host=OLLAMA_HOST)
+
+
 def score_application(
     application: dict[str, Any],
     criteria_path: str | Path,
@@ -94,7 +114,7 @@ def score_application(
     scorer: _Scorer | None = None,
     artifacts_dir: str | Path | None = None,
 ) -> dict[str, Any]:
-    scorer_client = scorer or _Scorer(model_name=OLLAMA_MODEL, host=OLLAMA_HOST)
+    scorer_client = scorer or _make_scorer()
     # Retrieval config (env-driven, opt-in for the ES few-shot corpus):
     #   GRANT_USE_RETRIEVAL=0  → disable hybrid evidence retrieval (full-text)
     #   GRANT_CORPUS_INDEX=grant_corpus → enable few-shot from the ES corpus

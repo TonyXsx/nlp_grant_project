@@ -33,3 +33,6 @@ six>=1.16
 # store needs neither). ES 8.x to match the vendored es_conn.
 elasticsearch>=8,<9
 elasticsearch-dsl>=8,<9
+
+# API scoring backend (SCORER_BACKEND=deepseek) + .env loading
+python-dotenv>=1.0

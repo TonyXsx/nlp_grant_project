@@ -7,6 +7,11 @@ env/
 .env/
 ENV/
 
+# Secrets / local config (API keys etc.) — never commit
+.env
+.env.local
+*.local.env
+
 # Python
 __pycache__/
 *.py[cod]

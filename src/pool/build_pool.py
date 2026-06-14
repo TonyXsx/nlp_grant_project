@@ -114,6 +114,24 @@ def _extract_positions(text: str) -> tuple[str, Optional[list]]:
     return clean, (positions or None)
 
 
+def _protect_tags(text: str) -> tuple[str, dict]:
+    """Replace DeepDOC @@..## position tags with split-safe placeholders so the
+    sentence splitter (which breaks on '.') doesn't shatter the float coords
+    inside them. Returns (protected_text, {placeholder: original_tag})."""
+    holders: dict[str, str] = {}
+    for i, tag in enumerate(_POS_TAG_RE.findall(text)):
+        holder = f"\x00{i}\x00"
+        text = text.replace(tag, holder, 1)
+        holders[holder] = tag
+    return text, holders
+
+
+def _restore_tags(text: str, holders: dict) -> str:
+    for holder, tag in holders.items():
+        text = text.replace(holder, tag)
+    return text
+
+
 def _split_sentences(text: str, delimiter: str = DELIMITER) -> list[str]:
     """Split text into delimiter-bounded pieces, keeping the delimiter attached
     so a chunk boundary never cuts mid-sentence. Mirrors how swxy's parsers emit
@@ -163,7 +181,11 @@ def _chunk_text(text: str, chunk_token_num: int = CHUNK_TOKEN_NUM,
        prevents the next heading from being swallowed into the previous body);
     3. ``naive_merge`` each group into <= chunk_token_num token chunks.
     """
-    pieces = _split_sentences(text, delimiter)
+    # Protect DeepDOC position tags so '.' in their coords doesn't get split,
+    # so each resulting chunk keeps the tags of the lines it covers (→ per-chunk
+    # page positions). Restored on each chunk at the end.
+    protected, holders = _protect_tags(text)
+    pieces = _split_sentences(protected, delimiter)
     if not pieces:
         return []
     flags = _heading_flags(pieces)
@@ -180,7 +202,7 @@ def _chunk_text(text: str, chunk_token_num: int = CHUNK_TOKEN_NUM,
     chunks: list[str] = []
     for group in groups:
         merged = naive_merge([(s, "") for s in group], chunk_token_num, delimiter)
-        chunks.extend(c.strip() for c in merged if c and c.strip())
+        chunks.extend(_restore_tags(c.strip(), holders) for c in merged if c and c.strip())
     return chunks
 
 
@@ -531,14 +553,22 @@ def build_chunk_pool(application: dict[str, Any], max_chars: int = MAX_CHARS) ->
             # (better for budget.py and for the scorer than flattened cells).
             for d in tokenize_table([((None, text), None)], dict(doc_tpl), True):
                 records.append(_record(d, is_table=True, position=None))
-        else:
-            clean, positions = _extract_positions(text)  # strip + capture @@..## tags
-            chunk_strs = _chunk_text(clean) if split else (
-                [clean.strip()] if clean.strip() else []
-            )
-            for ck in chunk_strs:
+        elif split:
+            # Chunk the raw text (tags preserved), then per chunk strip + capture
+            # its OWN @@..## tags → per-chunk page positions.
+            for ck in _chunk_text(text):
+                clean, positions = _extract_positions(ck)
+                if not clean.strip():
+                    continue
                 d = dict(doc_tpl)
-                tokenize(d, ck, True)  # → content_with_weight / content_ltks / content_sm_ltks
+                tokenize(d, clean, True)  # → content_with_weight / content_ltks / content_sm_ltks
+                records.append(_record(d, is_table=False, position=positions))
+        else:
+            # Derived single chunk (split=False): no chunking.
+            clean, positions = _extract_positions(text)
+            if clean.strip():
+                d = dict(doc_tpl)
+                tokenize(d, clean, True)
                 records.append(_record(d, is_table=False, position=positions))
 
         if not records:

@@ -1403,7 +1403,8 @@
         id: ev.id || '',
         text: ev.text || ev.quote || '',
         section: ev.section || '',
-        sourcePath: ev.source_path || ''
+        sourcePath: ev.source_path || '',
+        pages: Array.isArray(ev.pages) ? ev.pages : []
       })) : [];
       return {
         id: c.sub_id || c.id || slugify(c.name || ('criterion-' + idx)),
@@ -2003,7 +2004,14 @@
         return _promptPrefixes.some(p => t.startsWith(p));
       }
       if (criterion.evidence && criterion.evidence.length > 0) {
-        criterion.evidence.forEach(ev => { if (ev.text && !_isPromptChunk(ev.text)) evidenceTexts.push({ text: ev.text, source: ev.section || ev.sourcePath || '' }); });
+        criterion.evidence.forEach(ev => {
+          if (ev.text && !_isPromptChunk(ev.text)) {
+            const pg = (ev.pages && ev.pages.length) ? ('p.' + ev.pages.join(', ')) : '';
+            const sec = ev.section || ev.sourcePath || '';
+            const source = [sec, pg].filter(Boolean).join('  ·  ');
+            evidenceTexts.push({ text: ev.text, source });
+          }
+        });
       } else if (criterion.evidenceTop5 && criterion.evidenceTop5.length > 0) {
         criterion.evidenceTop5.forEach(t => { if (t && !_isPromptChunk(t)) evidenceTexts.push({ text: t, source: '' }); });
       } else if (criterion.evidenceIds && criterion.evidenceIds.length > 0) {

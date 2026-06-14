@@ -1,0 +1,352 @@
+{
+  "processed_sections": [
+    "Applicant CV",
+    "Applicant Research Background",
+    "Plain English Summary of Research",
+    "Scientific Abstract",
+    "Detailed Research Plan",
+    "Patient & Public Involvement",
+    "Training & Development and Research Support",
+    "SUMMARY BUDGET",
+    "Application Context",
+    "Plain English NLP Analysis",
+    "Application Form Analysis"
+  ],
+  "subcriteria_beliefs": {
+    "g.3": {
+      "good_evidence_ids": [
+        "secac__001_a",
+        "secac__001_b",
+        "secarb__001_b",
+        "secarb__001_c",
+        "secarb__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: Degrees and clinical/academic positions demonstrate relevant research experience and formal training.",
+        "Applicant Research Background: Extensive research experience across rheumatology, oncology, and dermatology with relevant techniques (single-cell seq, survival analysis) and formal training."
+      ]
+    },
+    "g.4": {
+      "good_evidence_ids": [
+        "secac__001_d",
+        "secac__001_e",
+        "secac__001_v",
+        "secarb__001_b",
+        "secarb__001_c",
+        "secarb__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: Research grants, multiple publications, and numerous prizes/awards indicate impactful research outputs and recognitions.",
+        "Applicant Research Background: Strong publication record (14 papers, 8 first author, h-index 9), prizes, and £25k grant indicate impactful outputs."
+      ]
+    },
+    "g.5": {
+      "good_evidence_ids": [
+        "secac__001_d",
+        "secac__001_v",
+        "secarb__001_c",
+        "secarb__001_e",
+        "sectdars__001_e"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: Lead applicant on a research grant and multiple awards suggest trajectory towards research leadership.",
+        "Applicant Research Background: Demonstrates leadership by leading projects, supervising juniors, chairing meetings, and sitting on national committee.",
+        "Training & Development and Research Support: Participation in Emerging Clinical Leaders and Future Leaders Academy indicates commitment to research leadership."
+      ]
+    },
+    "g.6": {
+      "good_evidence_ids": [
+        "secac__001_b",
+        "secac__001_c",
+        "secarb__001_a",
+        "secarb__001_b"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: Clinical academic roles (Academic Clinical Fellow, Academic Foundation Year) demonstrate commitment to practitioner-academic career.",
+        "Applicant Research Background: Explicit commitment to practitioner-academic career through AFP, ACF, and stated goal of becoming academic dermatologist."
+      ]
+    },
+    "g.1": {
+      "good_evidence_ids": [
+        "secarb__001_a",
+        "secarb__001_f",
+        "sectdars__001_a",
+        "sectdars__001_e"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Applicant articulates clear career vision (academic dermatologist) and positions DRF as next step, with strong mentorship and institutional support.",
+        "Training & Development and Research Support: Clear career vision (academic dermatologist) and well-justified, structured training plan with strong mentorship."
+      ]
+    },
+    "g.2": {
+      "good_evidence_ids": [
+        "secarb__001_e",
+        "secarb__001_f"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Section explains why this award is the right step, how it builds on prior experience, and develops partnerships via BADBIR and guideline group."
+      ]
+    },
+    "td.1": {
+      "good_evidence_ids": [
+        "secarb__001_c",
+        "secarb__001_d",
+        "sectdars__001_a",
+        "sectdars__001_b",
+        "sectdars__001_d",
+        "secsb__001_o",
+        "secsb__001_q",
+        "secsb__001_r"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Formal training includes PGDip in Health Research with Distinction, Good Clinical Practice, and specialised courses (Linux, RNA-seq).",
+        "Training & Development and Research Support: Training plan is highly detailed with specific courses, aligns with project methods, and has clear timeline across years.",
+        "SUMMARY BUDGET: Training costs include courses (systematic reviews, regression, predictors) explicitly aligned with project methods, supporting td.1."
+      ]
+    },
+    "td.2": {
+      "good_evidence_ids": [
+        "secarb__001_c",
+        "secarb__001_d",
+        "sectdars__001_b",
+        "sectdars__001_c",
+        "secsb__001_o",
+        "secsb__001_q",
+        "secsb__001_s"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Acquired targeted skills (R, Stata, single-cell sequencing) directly applicable to proposed psoriasis research.",
+        "Training & Development and Research Support: Applicant identifies skill gaps (e.g., formal statistics) and maps training directly to project tasks and methods.",
+        "SUMMARY BUDGET: Training justifications map each course (systematic review, regression, qualitative) to specific project tasks, supporting td.2."
+      ]
+    },
+    "td.3": {
+      "good_evidence_ids": [
+        "secarb__001_f",
+        "sectdars__001_a",
+        "sectdars__001_e",
+        "secsb__001_u",
+        "secsb__001_v"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Training positioned as stepping stone to Clinical Lectureship and independent Clinician Scientist career.",
+        "Training & Development and Research Support: Training supports career goal of becoming an academic dermatologist and includes leadership courses for postdoctoral trajectory.",
+        "SUMMARY BUDGET: Budget includes leadership courses (Emerging Clinical Leaders, Future Leaders Academy) supporting career development, supporting td.3."
+      ]
+    },
+    "wp.1": {
+      "good_evidence_ids": [
+        "secarb__001_e",
+        "secdrp__001_",
+        "secdrp__001_",
+        "secppi__001_a",
+        "secppi__001_b",
+        "secppi__001_c",
+        "secsb__001_e",
+        "secsb__001_f",
+        "secsb__001_g"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: Organised a PPI advisory event to collect feedback on project proposal, showing early integration of lived experience.",
+        "Detailed Research Plan: Phase 3 incorporates focus groups and beta testing with patients, and PPI input throughout, integrating lived experience into research design.",
+        "Patient & Public Involvement: Section describes initial PPI consultation, specific changes made based on feedback, and plans for an ongoing advisory group, strongly supporting integration of lived experience.",
+        "SUMMARY BUDGET: Budget includes multiple PPI lines (advisory group meetings, co-facilitation, training) showing clear integration of lived experience, supporting wp.1."
+      ]
+    },
+    "pr.2": {
+      "good_evidence_ids": [
+        "secsa__001_a",
+        "secdrp__001_l",
+        "secdrp__001_n",
+        "secdrp__001_q"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract identifies clear knowledge gap (no means to predict long-term disease control), supporting pr.2.c.",
+        "Detailed Research Plan: Extensive literature review (sections 3.1-3.5) cites multiple studies, identifies gaps, and justifies need for systematic review, strongly supporting evidence review quality and relevance."
+      ]
+    },
+    "pr.3": {
+      "good_evidence_ids": [
+        "secsa__001_b",
+        "secdrp__001_~",
+        "secdrp__001_",
+        "secdrp__001_§"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract provides phased timeline and clear feasibility indicators (Months 0-9, 7-24, 19-36), supporting pr.3.b.",
+        "Detailed Research Plan: Clear phased timeline, sample size calculations, and risk mitigation strategies demonstrate feasibility and appropriateness for a fellowship award."
+      ]
+    },
+    "pr.4": {
+      "good_evidence_ids": [
+        "secsa__001_b",
+        "secdrp__001_~",
+        "secdrp__001_",
+        "secdrp__001_"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract explicitly describes methods (systematic review, predictive modeling, focus groups) aligned with aims, supporting pr.4.a.",
+        "Detailed Research Plan: Explicit, structured methods for systematic review, predictive modeling with penalized regression, and qualitative focus groups demonstrate rigorous design aligned with aims."
+      ]
+    },
+    "pr.5": {
+      "good_evidence_ids": [
+        "secsa__001_c",
+        "secdrp__001_"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract details patient benefits (reduced anxiety, personalized management) and specific outcomes, supporting pr.5.a and pr.5.c.",
+        "Detailed Research Plan: Section 6.2 clearly outlines benefits for patients, clinicians, researchers, and commissioners, with specific outcomes linked to health service priorities."
+      ]
+    },
+    "pr.6": {
+      "good_evidence_ids": [
+        "secsa__001_b",
+        "secsa__001_c",
+        "secdrp__001_",
+        "secdrp__001_",
+        "secppi__001_c",
+        "secppi__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract describes PPI involvement at multiple stages (co-facilitation, qualitative analysis) and inclusive design, supporting pr.6.a and pr.6.c.",
+        "Detailed Research Plan: Phase 3 plans include co-design focus groups with patients and clinicians, beta testing, and PPI collaborators in analysis, showing strong engagement.",
+        "Patient & Public Involvement: Section demonstrates deep patient and public engagement at multiple stages, including co-design of focus groups and involvement in analysis and dissemination, strongly supporting pr.6."
+      ]
+    },
+    "wp.3": {
+      "good_evidence_ids": [
+        "secsa__001_c",
+        "secppi__001_a",
+        "secppi__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: Abstract includes dissemination plan (publications, conferences, infographics via patient associations) linking study to public benefit, supporting wp.3.",
+        "Patient & Public Involvement: Section links research objectives to patient benefits (reduced uncertainty, empowerment) and details dissemination plans, demonstrating commitment to maximising benefit."
+      ]
+    },
+    "pr.9": {
+      "good_evidence_ids": [
+        "secdrp__001_"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Detailed Research Plan: Explicit strategies to recruit from underserved groups (lower socioeconomic, ethnic minorities, disabilities) using an inclusion toolkit, supporting inclusive design."
+      ]
+    },
+    "ss.2": {
+      "good_evidence_ids": [
+        "secdrp__001_",
+        "secdrp__001_",
+        "sectdars__001_f",
+        "sectdars__001_h",
+        "sectdars__001_j"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Detailed Research Plan: Describes regular supervisor meetings, a progression committee, and a Patient and Lay Advisory Group, providing a structured supervision framework.",
+        "Training & Development and Research Support: Supervisors have explicit roles, relevant expertise, and planned regular meetings (weekly/fortnightly/monthly)."
+      ]
+    },
+    "wp.4": {
+      "good_evidence_ids": [
+        "secdrp__001_",
+        "secppi__001_a",
+        "secppi__001_c",
+        "secppi__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Detailed Research Plan: Explicit mention of targeting lower socioeconomic classes, ethnic minorities, and those with disabilities, with a toolkit to ensure representation.",
+        "Patient & Public Involvement: Section explicitly addresses diversity in PPI group, plans to recruit underserved groups, and mitigates digital exclusion, supporting representation of seldom heard groups."
+      ]
+    },
+    "wp.5": {
+      "good_evidence_ids": [
+        "secdrp__001_",
+        "secdrp__001_",
+        "secppi__001_c",
+        "secppi__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Detailed Research Plan: Patient and public involvement is planned at multiple stages: design (focus groups), analysis (PPI collaborators), and dissemination (infographics), ensuring inclusivity across the lifecycle.",
+        "Patient & Public Involvement: Section details PPI involvement across multiple project stages (design, recruitment, data collection, analysis, dissemination), with training and reporting, ensuring inclusivity across the r"
+      ]
+    },
+    "wp.6": {
+      "good_evidence_ids": [
+        "secppi__001_d",
+        "secsb__001_e",
+        "secsb__001_f",
+        "secsb__001_g"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Patient & Public Involvement: Section explicitly states budgeted PPI costs (remuneration, expenses) aligned with NIHR guidance, supporting a costed and resourced plan for inclusion.",
+        "SUMMARY BUDGET: Budget has explicit costed lines for PPI activities (advisory group, co-facilitation, training) aligned with NIHR guidance, supporting wp.6."
+      ]
+    },
+    "ss.1": {
+      "good_evidence_ids": [
+        "sectdars__001_r",
+        "sectdars__001_s"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: St John's Institute is described as world-renowned with >95% fellowship success rate, high research income, and top REF ratings."
+      ]
+    },
+    "ss.3": {
+      "good_evidence_ids": [
+        "sectdars__001_r",
+        "sectdars__001_s"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Organisation provides state-of-the-art facilities, full institutional support, and tailored environment for doctoral fellows."
+      ]
+    },
+    "ss.4": {
+      "good_evidence_ids": [
+        "sectdars__001_t"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: KCL holds Athena SWAN Silver award and commits to inclusive research culture, EDI, and research integrity."
+      ]
+    },
+    "pr.7": {
+      "good_evidence_ids": [
+        "secsb__001_c",
+        "secsb__001_i",
+        "secsb__001_n"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "SUMMARY BUDGET: Budget section provides explicit justifications linking resources (laptop, data management, statistician) to project tasks, supporting pr.7."
+      ]
+    }
+  },
+  "missing_signals": [
+    "pr.1",
+    "pr.8",
+    "wp.2"
+  ]
+}

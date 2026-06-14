@@ -78,6 +78,39 @@ def _total_text_length(result: dict) -> int:
 # below this threshold the LLM fallback is triggered.
 _MIN_CONTENT_CHARS = 2000
 
+# ── Parse-quality gate ───────────────────────────────────────────────────────
+# A parse is only "good" if it produced real CONTENT (the APPLICATION DETAILS /
+# SUMMARY BUDGET buckets), not just metadata like LEAD APPLICANT. Calibrated on
+# the sample set: good parses have 14k+ content chars; broken ones (e.g. an empty
+# APPLICATION DETAILS — IC00017/IC00021) have ~0. The floor is deliberately low
+# so DeepDOC's flat-but-real fallback output (a few KB) still passes.
+_MIN_GOOD_CONTENT_CHARS = 1000
+_MIN_GOOD_CONTENT_SECTIONS = 1
+# Top-level keys that are metadata, not scorable content.
+_METADATA_TOP_KEYS = {"doc_type", "LEAD APPLICANT & RESEARCH TEAM", "SUMMARY INFORMATION"}
+_CONTENT_TOP_KEYS = ("APPLICATION DETAILS", "SUMMARY BUDGET")
+
+
+def _content_stats(result: dict) -> tuple[int, int]:
+    """(content_chars, non_empty_content_sections) over the scorable buckets
+    (APPLICATION DETAILS + SUMMARY BUDGET), ignoring pure-metadata sections."""
+    chars = 0
+    for key in _CONTENT_TOP_KEYS:
+        chars += _total_text_length(result.get(key, {}))
+    ad = result.get("APPLICATION DETAILS", {})
+    sections = 0
+    if isinstance(ad, dict):
+        sections = sum(1 for v in ad.values() if _total_text_length(v) > 20)
+    return chars, sections
+
+
+def _parse_is_good(result: dict) -> bool:
+    """True if the parse has enough real content to score (not just metadata)."""
+    if _is_empty(result):
+        return False
+    chars, sections = _content_stats(result)
+    return chars >= _MIN_GOOD_CONTENT_CHARS and sections >= _MIN_GOOD_CONTENT_SECTIONS
+
 
 def _json_output_path(input_path: str) -> str:
     """Derive the final JSON output path next to the input file."""
@@ -147,41 +180,6 @@ def _is_rfpb_pdf(pdf_path: str, n_lines: int = 2) -> bool:
         return False
 
 
-# ──────────────────────────── DOCX extraction ────────────────────────────────
-
-def _try_docx_parse(docx_path: str) -> dict:
-    """
-    Extract all text from a DOCX file using python-docx and return a unified
-    dict with the full content stored under APPLICATION DETAILS["Raw Content"].
-
-    Returns {} if the file cannot be read or produces no text.
-    """
-    try:
-        from docx import Document
-        doc = Document(docx_path)
-        parts: list = []
-
-        for para in doc.paragraphs:
-            text = para.text.strip()
-            if text:
-                parts.append(text)
-
-        for table in doc.tables:
-            for row in table.rows:
-                row_text = "\t".join(cell.text.strip() for cell in row.cells)
-                if row_text.strip():
-                    parts.append(row_text)
-
-        full_text = "\n".join(parts)
-        if not full_text.strip():
-            return {}
-
-        return {"APPLICATION DETAILS": {"Raw Content": full_text}}
-    except Exception as e:
-        print(f"[all_type_parser] docx parsing failed: {e}")
-        return {}
-
-
 # ──────────────────────────── stage 5 — llm_fallback_parser ─────────────────
 
 def _try_llm_fallback(input_path: str) -> dict:
@@ -236,95 +234,83 @@ def parse(input_path: str) -> dict:
     """
     Parse any grant application file and return the unified JSON dict.
 
-    For PDF files the four-stage rule-based pipeline is tried in order,
-    with LLM as the final fallback.
-    For DOCX files, python-docx extraction is used directly; LLM is
-    triggered only if the extracted text is too sparse.
+    PDF: rule-based parsers → DeepDOC → LLM, accepting the first that passes the
+    content-quality gate (_parse_is_good), not merely the first non-empty one.
+    DOCX: DeepDOC DOCX parser, with LLM as fallback if it is thin/empty.
     """
     ext = Path(input_path).suffix.lower()
 
     if ext == ".pdf":
-        # Fast pre-check: if page 1 mentions "RfPB", go straight to RfPB parser
+        # Try parsers in order. Accept the FIRST one that passes the content gate
+        # (not merely non-empty). Remember every non-empty result so that, if none
+        # passes the gate, we still return the richest one instead of nothing.
+        candidates: list[tuple[str, dict]] = []
+
+        def _accept(name: str, result: dict):
+            if _parse_is_good(result):
+                chars, secs = _content_stats(result)
+                print(f"[all_type_parser] ✓ {name} (content={chars} chars, {secs} sections)")
+                return result
+            if not _is_empty(result):
+                candidates.append((name, result))
+                print(f"[all_type_parser] {name} too thin ({_content_stats(result)[0]} content chars) — continuing")
+            return None
+
         if _is_rfpb_pdf(input_path):
-            print("[all_type_parser] detected RfPB PDF — using RfPB_parser directly")
-            result = _try_rfpb_parser(input_path)
-            if not _is_empty(result):
-                print("[all_type_parser] ✓ RfPB_parser succeeded")
-                return result
-            print("[all_type_parser] RfPB_parser returned empty — falling back to LLM")
+            print("[all_type_parser] detected RfPB PDF — using RfPB_parser first")
+            rule_order = [("RfPB_parser", _try_rfpb_parser)]
         else:
-            # Stage 1: fellowship blue-box parser
-            result = _try_fellowships_parser(input_path)
-            if not _is_empty(result):
-                print("[all_type_parser] ✓ fellowships_parser succeeded")
-                return result
+            rule_order = [
+                ("fellowships_parser", _try_fellowships_parser),
+                ("pdf_parser", _try_pdf_parser),
+                ("RfPB_parser", _try_rfpb_parser),
+            ]
+        for name, fn in rule_order:
+            picked = _accept(name, fn(input_path))
+            if picked is not None:
+                return picked
 
-            # Stage 2: generic big-box PDF parser
-            result = _try_pdf_parser(input_path)
-            if not _is_empty(result):
-                print("[all_type_parser] ✓ pdf_parser succeeded")
-                return result
+        # DeepDOC fallback (CV layout + OCR + table + block-concat)
+        print("[all_type_parser] no rule-based parse passed the gate — trying DeepDOC fallback")
+        picked = _accept("deepdoc PDF fallback", _try_deepdoc_pdf(input_path))
+        if picked is not None:
+            return picked
 
-            # Stage 3: RfPB fallback for non-RfPB PDFs
-            result = _try_rfpb_parser(input_path)
-            if not _is_empty(result):
-                print("[all_type_parser] ✓ RfPB_parser succeeded")
-                return result
-
-            print("[all_type_parser] all PDF parsers returned empty — trying DeepDOC fallback")
-
-        # Stage 4: DeepDOC PDF fallback (CV layout + OCR + table + block-concat)
-        print("[all_type_parser] trying DeepDOC PDF fallback")
-        result = _try_deepdoc_pdf(input_path)
-        if not _is_empty(result):
-            print("[all_type_parser] ✓ deepdoc PDF fallback succeeded")
-            return result
-
-        # Stage 5: LLM fallback for all unrecognised PDFs
-        print("[all_type_parser] DeepDOC returned empty — falling back to LLM parser (glm-ocr + qwen3.5:27b)")
-        result = _try_llm_fallback(input_path)
-        if not _is_empty(result):
+        # LLM fallback (last resort): accept any non-empty result
+        print("[all_type_parser] DeepDOC thin — falling back to LLM parser (glm-ocr + qwen3.5:27b)")
+        llm_result = _try_llm_fallback(input_path)
+        if not _is_empty(llm_result):
             print("[all_type_parser] ✓ llm_fallback_parser succeeded")
-        else:
-            print("[all_type_parser] ✗ all parsers returned empty")
-        return result
+            return llm_result
+
+        # Nothing passed the gate — return the richest non-empty candidate seen.
+        if candidates:
+            best = max(candidates, key=lambda c: _content_stats(c[1])[0])
+            print(f"[all_type_parser] no good parse; returning best candidate: {best[0]}")
+            return best[1]
+        print("[all_type_parser] ✗ all parsers returned empty")
+        return {}
 
     elif ext in (".docx", ".doc"):
-        # Stage 1: fast raw-text extraction with python-docx
-        result = _try_docx_parse(input_path)
-        if not _is_empty(result) and _total_text_length(result) >= _MIN_CONTENT_CHARS:
-            print("[all_type_parser] ✓ docx parsing succeeded")
+        # DeepDOC DOCX parser directly (paragraphs + composed table content).
+        print("[all_type_parser] DOCX — using DeepDOC DOCX parser")
+        result = _try_deepdoc_docx(input_path)
+        if _parse_is_good(result):
+            chars, _ = _content_stats(result)
+            print(f"[all_type_parser] ✓ deepdoc DOCX parser ({chars} content chars)")
             return result
 
-        # Stage 2: DeepDOC DOCX parser (richer — composes table content)
-        print("[all_type_parser] docx text sparse/empty — trying DeepDOC DOCX parser")
-        dd_result = _try_deepdoc_docx(input_path)
-        if not _is_empty(dd_result) and _total_text_length(dd_result) >= _MIN_CONTENT_CHARS:
-            print("[all_type_parser] ✓ deepdoc DOCX parser succeeded")
-            return dd_result
-        # Keep whichever non-empty result is richer as a candidate before LLM
-        if _total_text_length(dd_result) > _total_text_length(result):
-            result = dd_result
-
-        # Stage 3: LLM fallback
-        if not _is_empty(result):
-            print(
-                f"[all_type_parser] docx result still sparse "
-                f"({_total_text_length(result)} chars < {_MIN_CONTENT_CHARS}) "
-                f"— falling back to LLM parser"
-            )
-        else:
-            print("[all_type_parser] docx parsing returned empty — falling back to LLM parser")
-
+        # LLM fallback when DeepDOC is thin/empty; keep DeepDOC result as candidate.
+        print("[all_type_parser] DeepDOC DOCX thin/empty — falling back to LLM parser")
         llm_result = _try_llm_fallback(input_path)
         if not _is_empty(llm_result):
             print("[all_type_parser] ✓ llm_fallback_parser succeeded")
             return llm_result
         if not _is_empty(result):
-            print("[all_type_parser] LLM empty — returning best non-empty docx result")
+            print("[all_type_parser] LLM empty — returning DeepDOC DOCX result")
             return result
         print("[all_type_parser] ✗ all parsers returned empty")
-        return result
+        return {}
 
     elif ext in (".pptx", ".ppt"):
         # PPTX: DeepDOC PPT parser, then LLM fallback

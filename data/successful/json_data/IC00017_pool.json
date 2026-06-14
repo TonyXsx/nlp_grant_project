@@ -1,0 +1,417 @@
+{
+  "secrc__001_a": {
+    "text": "Table Of Contents1. Lead Applicant Details2. Expression of Interest1. Lead Applicant DetailsUnmet Patient NeedOsteoporosis is a debilitating disease characterised by loss of bone mass and deterioration of the bone structure,resulting in a significantly increased risk of fragility fractures. An estimated 17% of men and 34% of women over 50 are affected by osteoporosis worldwide[1], with resulting fragility fractures accounting for significant health and social care costs. In 2017, fragility fractures cost the UK £4. 5bn with an associated one-year mortality rate of 33% –and such fractures are set to rise by 27% by 2030[2]. Osteoporosis is highly treatable, but drastically under-detected. Often those at high risk of fracture are not identified or treated, with an estimated treatment gap of 66% for women in the UK[2]. IBEX Bone Health (BH)will accurately predict osteoporosis from wrist x-rays opportunistically taken using widely available equipment whenever patients are x-rayed for other indications. A data-audit at Truro showed that only 11. 8% of 2,719 wrist x-rays were referred for a costly DXA;",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "table of contents1 . lead applicant details2 . expression of interest1 . lead applicant detailsunmet patient needosteoporosis is a debilitating disease characterised by loss of bone mass and deterioration of the bone structure , resulting in a significantly increased risk of fragility fractures . an estimated 17 % of men and 34 % of women over 50 are affected by osteoporosis worldwide [ 1 ] , with resulting fragility fractures accounting for significant health and social care costs . in 2017 , fragility fractures cost the uk £4 . 5bn with an associated one-year mortality rate of 33 % –and such fractures are set to rise by 27 % by 2030 [ 2 ] . osteoporosis is highly treatable , but drastically under-detected . often those at high risk of fracture are not identified or treated , with an estimated treatment gap of 66 % for women in the uk [ 2 ] . ibex bone health ( bh ) will accurately predict osteoporosis from wrist x-rays opportunistically taken using widely available equipment whenever patients are x-rayed for other indications . a data-audit at truro showed that only 11 . 8 % of 2,719 wrist x-rays were referred for a costly dxa ;",
+    "content_sm_ltks": "table of contents1 . lead applicant details2 . expression of interest1 . lead applicant detailsunmet patient needosteoporosis is a debilitating disease characterised by loss of bone mass and deterioration of the bone structure , resulting in a significantly increased risk of fragility fractures . an estimated 17 % of men and 34 % of women over 50 are affected by osteoporosis worldwide [ 1 ] , with resulting fragility fractures accounting for significant health and social care costs . in 2017 , fragility fractures cost the uk £4 . 5bn with an associated one-year mortality rate of 33 % –and such fractures are set to rise by 27 % by 2030 [ 2 ] . osteoporosis is highly treatable , but drastically under-detected . often those at high risk of fracture are not identified or treated , with an estimated treatment gap of 66 % for women in the uk [ 2 ] . ibex bone health ( bh ) will accurately predict osteoporosis from wrist x-rays opportunistically taken using widely available equipment whenever patients are x-rayed for other indications . a data-audit at truro showed that only 11 . 8 % of 2,719 wrist x-rays were referred for a costly dxa ;",
+    "title_tks": "raw content",
+    "token_count": 254,
+    "is_table": false,
+    "position": [
+      [
+        3,
+        38.0,
+        555.3,
+        254.3,
+        336.7
+      ]
+    ]
+  },
+  "secrc__001_b": {
+    "text": "23% had osteoporosis. IBEX BH would ensure the other 89% were analysed at very low cost. Areal Bone Mineral Density (aBMD), measured at the hips and lumbar spine by Dual Energy X-ray Absorptiometry (DXA)is the gold standard biomarker for osteoporosis. But NHS osteoporosis treatment waiting times of up to 16 months are primarily caused by poor availability of DXA equipment[4]and specialist radiographers. IBEX BH is a patented software product that derives a quantitative measure of aBMD comparable with DXA, from a standard clinical radiograph of the wrist, due to be granted CE marking imminently. IBEX BH can utilise fast, low cost and widely accessible digital radiography (DR)capacity to measure bone health and fracture risk, leading to earlier treatment and fracture prevention when used opportunistically on radiographs taken for other indications.",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "23 % had osteoporosis . ibex bh would ensure the other 89 % were analysed at very low cost . areal bone mineral density ( abmd ) , measured at the hips and lumbar spine by dual energy x-ray absorptiometry ( dxa ) is the gold standard biomarker for osteoporosis . but nhs osteoporosis treatment waiting times of up to 16 months are primarily caused by poor availability of dxa equipment [ 4 ] and specialist radiographers . ibex bh is a patented software product that derives a quantitative measure of abmd comparable with dxa , from a standard clinical radiograph of the wrist , due to be granted ce marking imminently . ibex bh can utilise fast , low cost and widely accessible digital radiography ( dr ) capacity to measure bone health and fracture risk , leading to earlier treatment and fracture prevention when used opportunistically on radiographs taken for other indications .",
+    "content_sm_ltks": "23 % had osteoporosis . ibex bh would ensure the other 89 % were analysed at very low cost . areal bone mineral density ( abmd ) , measured at the hips and lumbar spine by dual energy x-ray absorptiometry ( dxa ) is the gold standard biomarker for osteoporosis . but nhs osteoporosis treatment waiting times of up to 16 months are primarily caused by poor availability of dxa equipment [ 4 ] and specialist radiographers . ibex bh is a patented software product that derives a quantitative measure of abmd comparable with dxa , from a standard clinical radiograph of the wrist , due to be granted ce marking imminently . ibex bh can utilise fast , low cost and widely accessible digital radiography ( dr ) capacity to measure bone health and fracture risk , leading to earlier treatment and fracture prevention when used opportunistically on radiographs taken for other indications .",
+    "title_tks": "raw content",
+    "token_count": 188,
+    "is_table": false,
+    "position": [
+      [
+        3,
+        37.3,
+        555.3,
+        346.3,
+        473.7
+      ]
+    ]
+  },
+  "secrc__001_c": {
+    "text": "1. Johnell-O,-Kanis-JA. -An-estimate-of-the-worldwide-prevalence-and-disability-associated-with-osteoporotic-fractures. -Pubmed,-2006. 2. International-Osteoporosis-Foundation. -Key-statistics-for-Six-European-Countries. 3. Hernlund-E. -et-al. -Osteoporosis-in-the-European-Union: medical-management,-epidemiology-and-economic-burden. -Archives-of-osteoporosis,-2013; -8(136). 4. Royal-Osteoporosis-Society. -APPG-on-Osteoporosis-and-Bone-Health---Review-of-DXA-(bone-density-scanning)-facilities. -2024Proposed SolutionIBEX BH is software as a medical device that provides opportunistic case finding from wrist X-rays collected for other purposes. This highly innovative solution has the potential to reshape the osteoporosis care pathway by increasing case finding and facilitating earlier treatment to prevent fractures. Discussions with radiology, rheumatology and other specialist consultants have identified numerous potentialbenefits of using IBEX BH including:",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "1 . johnell-o , -kanis-ja . -an-estimate-of-the-worldwide-prevalence-and-disability-associated-with-osteoporotic-fractures . -pubmed , -2006 . 2 . international-osteoporosis-foundation . -key-statistics-for-six-european-countries . 3 . hernlund-e. -et-al . -osteoporosis-in-the-european-union : medical-management , -epidemiology-and-economic-burden . -archives-of-osteoporosis , -2013 ; -8 ( 136 ) . 4 . royal-osteoporosis-society . -appg-on-osteoporosis-and-bone-health -- -review-of-dxa- ( bone-density-scanning ) -facilities . -2024proposed solutionibex bh is software as a medical device that provides opportunistic case finding from wrist x-rays collected for other purposes . this highly innovative solution has the potential to reshape the osteoporosis care pathway by increasing case finding and facilitating earlier treatment to prevent fractures . discussions with radiology , rheumatology and other specialist consultants have identified numerous potentialbenefits of using ibex bh including :",
+    "content_sm_ltks": "1 . johnell-o , -kanis-ja . -an-estimate-of-the-worldwide-prevalence-and-disability-associated-with-osteoporotic-fractures . -pubmed , -2006 . 2 . international-osteoporosis-foundation . -key-statistics-for-six-european-countries . 3 . hernlund-e. -et-al . -osteoporosis-in-the-european-union : medical-management , -epidemiology-and-economic-burden . -archives-of-osteoporosis , -2013 ; -8 ( 136 ) . 4 . royal-osteoporosis-society . -appg-on-osteoporosis-and-bone-health -- -review-of-dxa- ( bone-density-scanning ) -facilities . -2024proposed solutionibex bh is software as a medical device that provides opportunistic case finding from wrist x-rays collected for other purposes . this highly innovative solution has the potential to reshape the osteoporosis care pathway by increasing case finding and facilitating earlier treatment to prevent fractures . discussions with radiology , rheumatology and other specialist consultants have identified numerous potentialbenefits of using ibex bh including :",
+    "title_tks": "raw content",
+    "token_count": 237,
+    "is_table": false,
+    "position": [
+      [
+        3,
+        38.0,
+        521.0,
+        483.3,
+        508.7
+      ],
+      [
+        3,
+        38.0,
+        411.0,
+        519.3,
+        531.7
+      ],
+      [
+        3,
+        39.0,
+        529.0,
+        542.0,
+        565.7
+      ],
+      [
+        3,
+        37.3,
+        552.7,
+        574.3,
+        600.7
+      ],
+      [
+        3,
+        39.0,
+        555.3,
+        642.0,
+        677.0
+      ]
+    ]
+  },
+  "secrc__001_d": {
+    "text": "Faster confirmation of imminent fracture risk, providing another, more rapid referral to treatmentReduced time to treatment for osteoporosis by triaging DXA referralsOpportunistic identification of osteoporosis from X-rays collected for other purposes, enabling referral to primary care and earlier treatment The primary route to market for the product is via integration with digital X-ray systems manufacturers who already sell into the NHS. The software package would be offered as an upgrade on installed systems or as an option on new systems being procured. This project will explore the feasibility of integrating IBEX BH outputs into existing NHScare pathways and will help to define a longitudinal study (targeting a i4i Product Development Award call)that will demonstrate value to the NHS. IBEX BH is based on a unique combination of physics modelling and AI methods, protected by several patents. The project will build on the existing IBEX IP and will not require licencing of third-party IP, other than commercially available software production tools. Any arising foreground IP will be governed by a collaboration agreement to define ownership. The total medical X-ray imaging market was valued at $16bn in 2018[6], with the DR segment alone accounting for c.",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "faster confirmation of imminent fracture risk , providing another , more rapid referral to treatmentreduced time to treatment for osteoporosis by triaging dxa referralsopportunistic identification of osteoporosis from x-rays collected for other purposes , enabling referral to primary care and earlier treatment the primary route to market for the product is via integration with digital x-ray systems manufacturers who already sell into the nhs . the software package would be offered as an upgrade on installed systems or as an option on new systems being procured . this project will explore the feasibility of integrating ibex bh outputs into existing nhscare pathways and will help to define a longitudinal study ( targeting a i4i product development award call ) that will demonstrate value to the nhs . ibex bh is based on a unique combination of physics modelling and ai methods , protected by several patents . the project will build on the existing ibex ip and will not require licencing of third-party ip , other than commercially available software production tools . any arising foreground ip will be governed by a collaboration agreement to define ownership . the total medical x-ray imaging market was valued at $ 16bn in 2018 [ 6 ] , with the dr segment alone accounting for c .",
+    "content_sm_ltks": "faster confirmation of imminent fracture risk , providing another , more rapid referral to treatmentreduced time to treatment for osteoporosis by triaging dxa referralsopportunistic identification of osteoporosis from x-rays collected for other purposes , enabling referral to primary care and earlier treatment the primary route to market for the product is via integration with digital x-ray systems manufacturers who already sell into the nhs . the software package would be offered as an upgrade on installed systems or as an option on new systems being procured . this project will explore the feasibility of integrating ibex bh outputs into existing nhscare pathways and will help to define a longitudinal study ( targeting a i4i product development award call ) that will demonstrate value to the nhs . ibex bh is based on a unique combination of physics modelling and ai methods , protected by several patents . the project will build on the existing ibex ip and will not require licencing of third-party ip , other than commercially available software production tools . any arising foreground ip will be governed by a collaboration agreement to define ownership . the total medical x-ray imaging market was valued at $ 16bn in 2018 [ 6 ] , with the dr segment alone accounting for c .",
+    "title_tks": "raw content",
+    "token_count": 248,
+    "is_table": false,
+    "position": [
+      [
+        3,
+        39.0,
+        521.7,
+        686.7,
+        711.3
+      ],
+      [
+        3,
+        58.3,
+        532.3,
+        713.0,
+        759.7
+      ],
+      [
+        3,
+        38.0,
+        555.3,
+        758.7,
+        794.7
+      ],
+      [
+        4,
+        39.0,
+        545.7,
+        65.0,
+        87.7
+      ],
+      [
+        4,
+        38.0,
+        552.0,
+        96.3,
+        144.7
+      ]
+    ]
+  },
+  "secrc__001_e": {
+    "text": "$3bn of product revenues from sales of over 50,000 systems per year[7], the majority of which would be addressable by a product resulting from this project. We expect 3-5% market penetration within 5 years. 5. National-Osteoporosis-Guideline-Group. -NOGG-2017: -Clinical-guideline-for-the-prevention-and-treatment-of-osteoporosis. -Springer-Science-and-Business-Media. -2018.",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "$ 3bn of product revenues from sales of over 50,000 systems per year [ 7 ] , the majority of which would be addressable by a product resulting from this project . we expect 3-5 % market penetration within 5 years . 5 . national-osteoporosis-guideline-group . -nogg-2017 : -clinical-guideline-for-the-prevention-and-treatment-of-osteoporosis . -springer-science-and-business-media . -2018 .",
+    "content_sm_ltks": "$ 3bn of product revenues from sales of over 50,000 systems per year [ 7 ] , the majority of which would be addressable by a product resulting from this project . we expect 3-5 % market penetration within 5 years . 5 . national-osteoporosis-guideline-group . -nogg-2017 : -clinical-guideline-for-the-prevention-and-treatment-of-osteoporosis . -springer-science-and-business-media . -2018 .",
+    "title_tks": "raw content",
+    "token_count": 103,
+    "is_table": false,
+    "position": [
+      [
+        4,
+        40.0,
+        546.7,
+        156.0,
+        192.0
+      ],
+      [
+        4,
+        40.0,
+        530.7,
+        202.7,
+        226.3
+      ]
+    ]
+  },
+  "secrc__001_f": {
+    "text": "6. https: //www. i-micronews. com/products/x-ray-detectors-for-medical-industrial-and-security-applications-2019/? cn-reloaded=17. https: //www. marketsandmarkets. com/Market-Reports/diagnostic-imaging-market-411. htmlBenefit to Patients and Healthcare SystemThe software has been validated in a recent study[8]where 261 participants over 50 years old received bilateral wrist X-rays and DXA scans of their wrists, hips, and lower back. IBEX BH derived their aBMD and T-scores (whichcompare results to a healthy young population). These were compared to DXA and demonstrated: IBEX BH agrees with DXA to the same level as one DXA manufacturer agrees with another. IBEX BH is an effective screening tool with low false positive and false negative rates. IBEX BH is effective at identifying patients from a wrist X-ray who will go on to be diagnosed with osteoporosis at the hip or spine. IBEX BH is a more accurate triaging tool than the currently used NICE-recommended fracture risk prediction tool (FRAX[9])for referral to DXA or treatment.",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "6. https : //www . i-micronews . com/products/x-ray-detectors-for-medical-industrial-and-security-applications-2019/ ? cn-reloaded=17 . https : //www . marketsandmarkets . com/market-reports/diagnostic-imaging-market-411 . htmlbenefit to patients and healthcare systemthe software has been validated in a recent study [ 8 ] where 261 participants over 50 years old received bilateral wrist x-rays and dxa scans of their wrists , hips , and lower back . ibex bh derived their abmd and t-scores ( whichcompare results to a healthy young population ) . these were compared to dxa and demonstrated : ibex bh agrees with dxa to the same level as one dxa manufacturer agrees with another . ibex bh is an effective screening tool with low false positive and false negative rates . ibex bh is effective at identifying patients from a wrist x-ray who will go on to be diagnosed with osteoporosis at the hip or spine . ibex bh is a more accurate triaging tool than the currently used nice-recommended fracture risk prediction tool ( frax [ 9 ] ) for referral to dxa or treatment .",
+    "content_sm_ltks": "6. https : //www . i-micronews . com/products/x-ray-detectors-for-medical-industrial-and-security-applications-2019/ ? cn-reloaded=17 . https : //www . marketsandmarkets . com/market-reports/diagnostic-imaging-market-411 . htmlbenefit to patients and healthcare systemthe software has been validated in a recent study [ 8 ] where 261 participants over 50 years old received bilateral wrist x-rays and dxa scans of their wrists , hips , and lower back . ibex bh derived their abmd and t-scores ( whichcompare results to a healthy young population ) . these were compared to dxa and demonstrated : ibex bh agrees with dxa to the same level as one dxa manufacturer agrees with another . ibex bh is an effective screening tool with low false positive and false negative rates . ibex bh is effective at identifying patients from a wrist x-ray who will go on to be diagnosed with osteoporosis at the hip or spine . ibex bh is a more accurate triaging tool than the currently used nice-recommended fracture risk prediction tool ( frax [ 9 ] ) for referral to dxa or treatment .",
+    "title_tks": "raw content",
+    "token_count": 249,
+    "is_table": false,
+    "position": [
+      [
+        4,
+        39.0,
+        545.7,
+        236.7,
+        258.7
+      ],
+      [
+        4,
+        39.0,
+        445.7,
+        271.0,
+        283.3
+      ],
+      [
+        4,
+        40.0,
+        557.3,
+        323.7,
+        358.7
+      ]
+    ]
+  },
+  "secrc__001_g": {
+    "text": "IBEX has developed a comprehensive health economics model, audited by York Healthcare Economics Consortium. If implemented across the NHS over 20 years, IBEX BH adoption is predicted to generate up to £2bn of cost savings as a result of 429,000 fewer fractures and 12,000 fewer deaths.  Additional service user benefits include: Earlier opportunistic detection of osteoporosis in over-50s –leading to reduced time to treatment and ultimately prevention of future fragility fractures. Increased access to diagnosis for users with learning difficulties or mobility issues for whom DXA is not possible –promoting equality of service provision. Past PPI involvement has identified general support for the rationale of IBEX BH, but stressed the importance of earnt trust via an evidence base[10]. This work flagged the importance of PPIE for the successful exploitation of IBEX BH, particularly in integrating how further treatment and/or testing is communicated with patients. A PPIE lead has been identified who will actively encourage a patient voice across the project’s duration. 8. Meertens-et-al. -Development-of-an-opportunistic-diagnostic-prediction-algorithm-for-osteoporosis-and-fragility-fracture-risk-estimates-from-forearm-radiographs-(The-OFFER1-Study).",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "ibex has developed a comprehensive health economics model , audited by york healthcare economics consortium . if implemented across the nhs over 20 years , ibex bh adoption is predicted to generate up to £2bn of cost savings as a result of 429,000 fewer fractures and 12,000 fewer deaths . additional service user benefits include : earlier opportunistic detection of osteoporosis in over-50s –leading to reduced time to treatment and ultimately prevention of future fragility fractures . increased access to diagnosis for users with learning difficulties or mobility issues for whom dxa is not possible –promoting equality of service provision . past ppi involvement has identified general support for the rationale of ibex bh , but stressed the importance of earnt trust via an evidence base [ 10 ] . this work flagged the importance of ppie for the successful exploitation of ibex bh , particularly in integrating how further treatment and/or testing is communicated with patients . a ppie lead has been identified who will actively encourage a patient voice across the project ’ s duration . 8 . meertens-et-al . -development-of-an-opportunistic-diagnostic-prediction-algorithm-for-osteoporosis-and-fragility-fracture-risk-estimates-from-forearm-radiographs- ( the-offer1-study ) .",
+    "content_sm_ltks": "ibex has developed a comprehensive health economics model , audited by york healthcare economics consortium . if implemented across the nhs over 20 years , ibex bh adoption is predicted to generate up to £2bn of cost savings as a result of 429,000 fewer fractures and 12,000 fewer deaths . additional service user benefits include : earlier opportunistic detection of osteoporosis in over-50s –leading to reduced time to treatment and ultimately prevention of future fragility fractures . increased access to diagnosis for users with learning difficulties or mobility issues for whom dxa is not possible –promoting equality of service provision . past ppi involvement has identified general support for the rationale of ibex bh , but stressed the importance of earnt trust via an evidence base [ 10 ] . this work flagged the importance of ppie for the successful exploitation of ibex bh , particularly in integrating how further treatment and/or testing is communicated with patients . a ppie lead has been identified who will actively encourage a patient voice across the project ’ s duration . 8 . meertens-et-al . -development-of-an-opportunistic-diagnostic-prediction-algorithm-for-osteoporosis-and-fragility-fracture-risk-estimates-from-forearm-radiographs- ( the-offer1-study ) .",
+    "title_tks": "raw content",
+    "token_count": 268,
+    "is_table": false,
+    "position": [
+      [
+        4,
+        55.7,
+        553.7,
+        357.0,
+        429.7
+      ],
+      [
+        4,
+        38.0,
+        553.7,
+        429.7,
+        465.0
+      ],
+      [
+        4,
+        55.7,
+        531.7,
+        486.7,
+        535.0
+      ],
+      [
+        4,
+        37.3,
+        550.0,
+        532.3,
+        580.7
+      ]
+    ]
+  },
+  "secrc__001_h": {
+    "text": "-ORE. -20239. Sheffield-University. -FRAX: -Fracture-Risk-Assessment-Tool-(website). -https: //frax. shef. ac. uk/FRAX/10. Manning,-F. -Mahmoud-A-&-Meertens-R. -Understanding-patient-views-and-acceptability-of-predictive-software-in-osteoporosis-identification. -Radiography. -2023 Project Plan and Spending PlanThe project plan works towards establishing an optimised integration of IBEX BH osteoporosis screening within Radiology at Truro Hospital (Royal Cornwall Hospitals NHS Trust), assessing its initial feasibility, potential effectiveness, and impact on clinical workflow. Work packages over a 12-month period include:",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "-ore. -20239 . sheffield-university . -frax : -fracture-risk-assessment-tool- ( website ) . -https : //frax . shef . ac . uk/frax/10 . manning , -f. -mahmoud-a- & -meertens-r. -understanding-patient-views-and-acceptability-of-predictive-software-in-osteoporosis-identification . -radiography . -2023 project plan and spending planthe project plan works towards establishing an optimised integration of ibex bh osteoporosis screening within radiology at truro hospital ( royal cornwall hospitals nhs trust ) , assessing its initial feasibility , potential effectiveness , and impact on clinical workflow . work packages over a 12-month period include :",
+    "content_sm_ltks": "-ore. -20239 . sheffield-university . -frax : -fracture-risk-assessment-tool- ( website ) . -https : //frax . shef . ac . uk/frax/10 . manning , -f. -mahmoud-a- & -meertens-r. -understanding-patient-views-and-acceptability-of-predictive-software-in-osteoporosis-identification . -radiography . -2023 project plan and spending planthe project plan works towards establishing an optimised integration of ibex bh osteoporosis screening within radiology at truro hospital ( royal cornwall hospitals nhs trust ) , assessing its initial feasibility , potential effectiveness , and impact on clinical workflow . work packages over a 12-month period include :",
+    "title_tks": "raw content",
+    "token_count": 155,
+    "is_table": false,
+    "position": [
+      [
+        4,
+        39.0,
+        536.0,
+        592.0,
+        615.7
+      ],
+      [
+        4,
+        39.0,
+        491.7,
+        626.3,
+        638.7
+      ],
+      [
+        4,
+        39.0,
+        553.7,
+        647.3,
+        672.7
+      ],
+      [
+        4,
+        39.0,
+        530.7,
+        714.0,
+        749.0
+      ]
+    ]
+  },
+  "secrc__001_i": {
+    "text": "1. More detailed analysis of current Radiology practices based on extended retrospective audit, providing a baseline of current practice and product potential (First month). 2. Pathway modelling to predict and optimize patient journey and outcomes within a new screening framework,informed by clinical and PPIE workshops (months 1-2).",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "1 . more detailed analysis of current radiology practices based on extended retrospective audit , providing a baseline of current practice and product potential ( first month ) . 2 . pathway modelling to predict and optimize patient journey and outcomes within a new screening framework , informed by clinical and ppie workshops ( months 1-2 ) .",
+    "content_sm_ltks": "1 . more detailed analysis of current radiology practices based on extended retrospective audit , providing a baseline of current practice and product potential ( first month ) . 2 . pathway modelling to predict and optimize patient journey and outcomes within a new screening framework , informed by clinical and ppie workshops ( months 1-2 ) .",
+    "title_tks": "raw content",
+    "token_count": 64,
+    "is_table": false,
+    "position": [
+      [
+        4,
+        40.0,
+        537.0,
+        759.7,
+        794.7
+      ]
+    ]
+  },
+  "secrc__001_j": {
+    "text": "3. Clinical and cost effectiveness modelling to evaluate the theoretical patient benefits and financial viability of potential patient pathways (months 2-4).",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "3 . clinical and cost effectiveness modelling to evaluate the theoretical patient benefits and financial viability of potential patient pathways ( months 2-4 ) .",
+    "content_sm_ltks": "3 . clinical and cost effectiveness modelling to evaluate the theoretical patient benefits and financial viability of potential patient pathways ( months 2-4 ) .",
+    "title_tks": "raw content",
+    "token_count": 27,
+    "is_table": false,
+    "position": null
+  },
+  "secrc__001_k": {
+    "text": "4. The development and execution of a 100-patient pilot study to evaluate clinical workflow integration,qualitative patient feedback, and screening performance quantitatively (months 4-12).",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "4 . the development and execution of a 100-patient pilot study to evaluate clinical workflow integration , qualitative patient feedback , and screening performance quantitatively ( months 4-12 ) .",
+    "content_sm_ltks": "4 . the development and execution of a 100-patient pilot study to evaluate clinical workflow integration , qualitative patient feedback , and screening performance quantitatively ( months 4-12 ) .",
+    "title_tks": "raw content",
+    "token_count": 38,
+    "is_table": false,
+    "position": null
+  },
+  "secrc__001_l": {
+    "text": "5. Further commercial development of the software (ongoing). Applicant and Team DetailsCompany InformationIBEX is focused on the development of medical X-ray imaging software to address population health challenges andimprove the value of radiography outputs. The Company has a strong track record of success in delivering grant-funded projects, including a large clinical study funded with a €1. 6m Horizon2020 project (ref 777835)and is currently focused on commercialising the IBEX Bone Health product via integration into OEM systems. IBEX has recently completed a self-funded study in collaboration with the University of Exeter to demonstrate the accuracy of the wrist-based product, and this project builds upon that research as a stepping stone to demonstration of clinical efficacy and deployment within the healthcare setting.  Whilst this project focuses on the clinical feasibility of deploying the wrist-based IBEX BH product for digital radiography systems, other work is ongoing to develop the technology for use on additional anatomies including knee, ankle and pelvis (funded through the Innovate UK Biomedical Catalyst programme)and to facilitate deployment on mammography systems to allow bone health assessments to be made from wrist scans collected on mammography at the same time as screening appointments (funded by the Innovate UK SMART programme).",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "5 . further commercial development of the software ( ongoing ) . applicant and team detailscompany informationibex is focused on the development of medical x-ray imaging software to address population health challenges andimprove the value of radiography outputs . the company has a strong track record of success in delivering grant-funded projects , including a large clinical study funded with a €1 . 6m horizon2020 project ( ref 777835 ) and is currently focused on commercialising the ibex bone health product via integration into oem systems . ibex has recently completed a self-funded study in collaboration with the university of exeter to demonstrate the accuracy of the wrist-based product , and this project builds upon that research as a stepping stone to demonstration of clinical efficacy and deployment within the healthcare setting . whilst this project focuses on the clinical feasibility of deploying the wrist-based ibex bh product for digital radiography systems , other work is ongoing to develop the technology for use on additional anatomies including knee , ankle and pelvis ( funded through the innovate uk biomedical catalyst programme ) and to facilitate deployment on mammography systems to allow bone health assessments to be made from wrist scans collected on mammography at the same time as screening appointments ( funded by the innovate uk smart programme ) .",
+    "content_sm_ltks": "5 . further commercial development of the software ( ongoing ) . applicant and team detailscompany informationibex is focused on the development of medical x-ray imaging software to address population health challenges andimprove the value of radiography outputs . the company has a strong track record of success in delivering grant-funded projects , including a large clinical study funded with a €1 . 6m horizon2020 project ( ref 777835 ) and is currently focused on commercialising the ibex bone health product via integration into oem systems . ibex has recently completed a self-funded study in collaboration with the university of exeter to demonstrate the accuracy of the wrist-based product , and this project builds upon that research as a stepping stone to demonstration of clinical efficacy and deployment within the healthcare setting . whilst this project focuses on the clinical feasibility of deploying the wrist-based ibex bh product for digital radiography systems , other work is ongoing to develop the technology for use on additional anatomies including knee , ankle and pelvis ( funded through the innovate uk biomedical catalyst programme ) and to facilitate deployment on mammography systems to allow bone health assessments to be made from wrist scans collected on mammography at the same time as screening appointments ( funded by the innovate uk smart programme ) .",
+    "title_tks": "raw content",
+    "token_count": 253,
+    "is_table": false,
+    "position": [
+      [
+        5,
+        55.0,
+        552.7,
+        64.0,
+        144.7
+      ],
+      [
+        6,
+        37.3,
+        555.3,
+        72.7,
+        156.0
+      ]
+    ]
+  },
+  "secrc__001_m": {
+    "text": "IBEX employs a group of highly skilled mathematicians, physicists, product development experts and business professionals with a wide-ranging skillset that spans research and development, software engineering and product/project management and commercial engagement and exploitation. We also work with a wide network of clinicians and OEM partners meaning we are well-placed to deliver the proposed project benefits and ensure they make it into clinical practice. The project will be a blueprint to facilitate more rapid exploitation of additional IBEX BH product developments and enhancements as they come online.",
+    "parser_section": "Raw Content",
+    "source_path": "APPLICATION DETAILS > Raw Content",
+    "content_ltks": "ibex employs a group of highly skilled mathematicians , physicists , product development experts and business professionals with a wide-ranging skillset that spans research and development , software engineering and product/project management and commercial engagement and exploitation . we also work with a wide network of clinicians and oem partners meaning we are well-placed to deliver the proposed project benefits and ensure they make it into clinical practice . the project will be a blueprint to facilitate more rapid exploitation of additional ibex bh product developments and enhancements as they come online .",
+    "content_sm_ltks": "ibex employs a group of highly skilled mathematicians , physicists , product development experts and business professionals with a wide-ranging skillset that spans research and development , software engineering and product/project management and commercial engagement and exploitation . we also work with a wide network of clinicians and oem partners meaning we are well-placed to deliver the proposed project benefits and ensure they make it into clinical practice . the project will be a blueprint to facilitate more rapid exploitation of additional ibex bh product developments and enhancements as they come online .",
+    "title_tks": "raw content",
+    "token_count": 101,
+    "is_table": false,
+    "position": [
+      [
+        6,
+        38.0,
+        552.7,
+        167.7,
+        227.0
+      ],
+      [
+        6,
+        37.3,
+        542.3,
+        235.0,
+        294.7
+      ],
+      [
+        6,
+        40.0,
+        544.0,
+        305.3,
+        317.7
+      ]
+    ]
+  },
+  "secdt__001": {
+    "text": "<table><caption>National Institute forI Health and Care Research</caption>\n<tr><td  >Reference number </td><td  >NIHR207830</td></tr>\n<tr><td  >Programme </td><td  >Invention for Innovation</td></tr>\n<tr><td  >Call </td><td></td></tr>\n<tr><td  >Lead Applicant </td><td  >Mr Kurt Scott</td></tr>\n<tr><td  >Lead SME </td><td  >IBEX Innovations Ltd</td></tr>\n<tr><td  >Research Title </td><td  >Clinical translation of IBEX Bone Health opportunistic osteoporosis screening:  A feasibility study</td></tr>\n<tr><td  >Start Date </td><td  >04/08/2024</td></tr>\n<tr><td  >Grant Duration (Months)</td><td  >12</td></tr>\n<tr><td  >End Date </td><td  >03/08/2025</td></tr>\n<tr><td  >Estimated Research Cost </td><td  >£149,492.00</td></tr>\n<tr><td  >Estimated NHS Support & Treatment costs </td><td  >£4,045.00</td></tr>\n</table>",
+    "parser_section": "Document Tables",
+    "source_path": "APPLICATION DETAILS > Document Tables > Table 1",
+    "content_ltks": "national institute fori health and care research reference number nihr207830 programme invention for innovation call lead applicant mr kurt scott lead sme ibex innovations ltd research title clinical translation of ibex bone health opportunistic osteoporosis screening : a feasibility study start date 04/08/2024 grant duration ( months ) 12 end date 03/08/2025 estimated research cost £149,492.00 estimated nhs support & treatment costs £4,045.00",
+    "content_sm_ltks": "national institute fori health and care research reference number nihr207830 programme invention for innovation call lead applicant mr kurt scott lead sme ibex innovations ltd research title clinical translation of ibex bone health opportunistic osteoporosis screening : a feasibility study start date 04/08/2024 grant duration ( months ) 12 end date 03/08/2025 estimated research cost £149,492.00 estimated nhs support & treatment costs £4,045.00",
+    "title_tks": "document tables",
+    "token_count": 279,
+    "is_table": true,
+    "position": null
+  },
+  "secdt__002": {
+    "text": "<table><caption>2. Expression of Interest</caption>\n<tr><td  >Full Name </td><td  >Mr Kurt Scott </td><td  >ORCID iD </td><td  >0000-0003-2473-962X</td></tr>\n<tr><td  >Position </td><td  >Operations Manager </td><td  >Address Line 1 </td><td  >NETPark Plexus</td></tr>\n<tr><td  >Speciality </td><td  >Other </td><td  >Address Line 2 </td><td  >Thomas Wright Way</td></tr>\n<tr><td  >Institution </td><td  >IBEX Innovations Ltd </td><td  >Address Line 3</td><td></td></tr>\n<tr><td  >City/Town </td><td  >Sedgefield </td><td  >Email Address </td><td></td></tr>\n</table>",
+    "parser_section": "Document Tables",
+    "source_path": "APPLICATION DETAILS > Document Tables > Table 2",
+    "content_ltks": "2 . expression of interest full name mr kurt scott orcid id 0000-0003-2473-962x position operations manager address line 1 netpark plexus speciality other address line 2 thomas wright way institution ibex innovations ltd address line 3 city/town sedgefield email address",
+    "content_sm_ltks": "2 . expression of interest full name mr kurt scott orcid id 0000-0003-2473-962x position operations manager address line 1 netpark plexus speciality other address line 2 thomas wright way institution ibex innovations ltd address line 3 city/town sedgefield email address",
+    "title_tks": "document tables",
+    "token_count": 211,
+    "is_table": true,
+    "position": null
+  },
+  "secdt__003": {
+    "text": "<table>\n<tr><td  >IBEX will assign a project manager to oversee delivery of the project in line with project and risk management procedures outlined in the company’s ISO13485 accredited quality management system.</td></tr>\n<tr><td  >A financial package of up £149,492 has been costed. £22,792 will cover staff support for IBEX. £116,700 is allocated  to UoE, who will be responsible for development and execution of the study. Their costs are split between staff costs  and indirect and estate support. Up to £10,000 is allocated to PPIE activities (travel, subsistence and time reimbursement)and research team site and conference expenses (travel, accommodation, subsistence). The latter will be kept to a minimum with an awareness of sustainability.</td></tr>\n<tr><td  >External NHS Support &Treatment costs are estimated to be £4045.</td></tr>\n<tr><td  >i4i Connect funding will allow us to quickly validate the feasibility of suitable care pathway integrations which will culminate in the formulation of a comprehensive clinical trial design, anticipated to be supported by i4i PDA funding.</td></tr>\n<tr><td  >The project team has an established track record. Ibex Innovations and the University of Exeter (UoE)have worked  collaboratively since 2020, in particular with successful Innovate UK funding for pre-clinical development of IBEX BH.  A tripartite Memorandum of Understanding with Royal Cornwall Hospitals Trust (RCHT)has been in place since September 2023.</td></tr>\n<tr><td  >IBEX will provide a dedicated project lead for the duration of the project, along with technical support for the software product, and a permanently employed health statistician. IBEX also have expertise to develop the user experience  and graphical user interface of IBEX BH and its outputs based on clinical and PPI feedback.</td></tr>\n<tr><td  >UoE will act as sponsor for the study, with Dr Robert Meertens the named principal investigator and project manager for the day-to-day running of the study. UoE has two further established academics linked to the project, with  expertise in healthcare modelling (Dr Sebastian Rachuba)and health technology assessment (Zhivko Zhelev).</td></tr>\n<tr><td  >Dr Tom Bean (Musculoskeletal Radiologist)and Penny Lewis (DXA Service Lead)are RCHT clinical leads on the project. Funding is also requested for further clinical support of data collection from NIHR-funded research nurses, a  UoE research radiographer, and research assistant from RCHT, with specific colleagues already identified for these potential roles.</td></tr>\n<tr><td  >Kath Maquire will act as PPIE lead for the full duration of the project, with existing links to the South West Peninsula Patient and Public Engagement Group (PenPEG)for workshop recruitment.</td></tr>\n<tr><td  >The project, and in particular the pilot study (work package 4)will have support from the South West NIHR Clinical  Trials Unit, and project design has been supported by Imperial Research Support Service hub.</td></tr>\n<tr><td  >Regular monthly meetings with the aforementioned research team will be held to ensure work packages are  executed to a pre-determined timeline using work packages as milestones.</td></tr>\n<tr><td  >Company Name:   IBEX Innovations Limited</td></tr>\n<tr><td  >Address:   NETPark Plexus, Thomas Wright Way, Sedgefield, TS21 3FD</td></tr>\n<tr><td  rowspan=3 >Contact:   Kurt Scott +44 191 249 7912 www.ibexinnovations.co.uk</td></tr>\n<tr><td  >Page 5 of 6</td></tr>\n</table>",
+    "parser_section": "Document Tables",
+    "source_path": "APPLICATION DETAILS > Document Tables > Table 3",
+    "content_ltks": "ibex will assign a project manager to oversee delivery of the project in line with project and risk management procedures outlined in the company ’ s iso13485 accredited quality management system . a financial package of up £149,492 has been costed . £22,792 will cover staff support for ibex . £116,700 is allocated to uoe , who will be responsible for development and execution of the study . their costs are split between staff costs and indirect and estate support . up to £10,000 is allocated to ppie activities ( travel , subsistence and time reimbursement ) and research team site and conference expenses ( travel , accommodation , subsistence ) . the latter will be kept to a minimum with an awareness of sustainability . external nhs support & treatment costs are estimated to be £4045 . i4i connect funding will allow us to quickly validate the feasibility of suitable care pathway integrations which will culminate in the formulation of a comprehensive clinical trial design , anticipated to be supported by i4i pda funding . the project team has an established track record . ibex innovations and the university of exeter ( uoe ) have worked collaboratively since 2020 , in particular with successful innovate uk funding for pre-clinical development of ibex bh . a tripartite memorandum of understanding with royal cornwall hospitals trust ( rcht ) has been in place since september 2023 . ibex will provide a dedicated project lead for the duration of the project , along with technical support for the software product , and a permanently employed health statistician . ibex also have expertise to develop the user experience and graphical user interface of ibex bh and its outputs based on clinical and ppi feedback . uoe will act as sponsor for the study , with dr robert meertens the named principal investigator and project manager for the day-to-day running of the study . uoe has two further established academics linked to the project , with expertise in healthcare modelling ( dr sebastian rachuba ) and health technology assessment ( zhivko zhelev ) . dr tom bean ( musculoskeletal radiologist ) and penny lewis ( dxa service lead ) are rcht clinical leads on the project . funding is also requested for further clinical support of data collection from nihr-funded research nurses , a uoe research radiographer , and research assistant from rcht , with specific colleagues already identified for these potential roles . kath maquire will act as ppie lead for the full duration of the project , with existing links to the south west peninsula patient and public engagement group ( penpeg ) for workshop recruitment . the project , and in particular the pilot study ( work package 4 ) will have support from the south west nihr clinical trials unit , and project design has been supported by imperial research support service hub . regular monthly meetings with the aforementioned research team will be held to ensure work packages are executed to a pre-determined timeline using work packages as milestones . company name : ibex innovations limited address : netpark plexus , thomas wright way , sedgefield , ts21 3fd contact : kurt scott +44 191 249 7912 www.ibexinnovations.co.uk page 5 of 6",
+    "content_sm_ltks": "ibex will assign a project manager to oversee delivery of the project in line with project and risk management procedures outlined in the company ’ s iso13485 accredited quality management system . a financial package of up £149,492 has been costed . £22,792 will cover staff support for ibex . £116,700 is allocated to uoe , who will be responsible for development and execution of the study . their costs are split between staff costs and indirect and estate support . up to £10,000 is allocated to ppie activities ( travel , subsistence and time reimbursement ) and research team site and conference expenses ( travel , accommodation , subsistence ) . the latter will be kept to a minimum with an awareness of sustainability . external nhs support & treatment costs are estimated to be £4045 . i4i connect funding will allow us to quickly validate the feasibility of suitable care pathway integrations which will culminate in the formulation of a comprehensive clinical trial design , anticipated to be supported by i4i pda funding . the project team has an established track record . ibex innovations and the university of exeter ( uoe ) have worked collaboratively since 2020 , in particular with successful innovate uk funding for pre-clinical development of ibex bh . a tripartite memorandum of understanding with royal cornwall hospitals trust ( rcht ) has been in place since september 2023 . ibex will provide a dedicated project lead for the duration of the project , along with technical support for the software product , and a permanently employed health statistician . ibex also have expertise to develop the user experience and graphical user interface of ibex bh and its outputs based on clinical and ppi feedback . uoe will act as sponsor for the study , with dr robert meertens the named principal investigator and project manager for the day-to-day running of the study . uoe has two further established academics linked to the project , with expertise in healthcare modelling ( dr sebastian rachuba ) and health technology assessment ( zhivko zhelev ) . dr tom bean ( musculoskeletal radiologist ) and penny lewis ( dxa service lead ) are rcht clinical leads on the project . funding is also requested for further clinical support of data collection from nihr-funded research nurses , a uoe research radiographer , and research assistant from rcht , with specific colleagues already identified for these potential roles . kath maquire will act as ppie lead for the full duration of the project , with existing links to the south west peninsula patient and public engagement group ( penpeg ) for workshop recruitment . the project , and in particular the pilot study ( work package 4 ) will have support from the south west nihr clinical trials unit , and project design has been supported by imperial research support service hub . regular monthly meetings with the aforementioned research team will be held to ensure work packages are executed to a pre-determined timeline using work packages as milestones . company name : ibex innovations limited address : netpark plexus , thomas wright way , sedgefield , ts21 3fd contact : kurt scott +44 191 249 7912 www.ibexinnovations.co.uk page 5 of 6",
+    "title_tks": "document tables",
+    "token_count": 814,
+    "is_table": true,
+    "position": null
+  },
+  "secafa__001": {
+    "text": "Application form structural analysis derived from parser output.\nUse this single derived chunk as evidence for Application Form criteria af.*.\n\nSection coverage and hierarchy:\n- Raw Content: words=1545\n- Document Tables: words=788\n\nFormatting and structure indicators:\n- parser_sections_detected=2\n- bullet_or_numbered_list_markers=6\n- numbered_heading_like_lines=0\n- table_like_budget_lines=0\n- extracted_emphasis_markers=1\n- Parser limitation: bold/emphasis may be lost during text extraction; use extracted headings, section labels, list markers, and table structure as the available evidence.\n\nDuplication and repetition indicators:\n- duplicate_sentence_rate_excluding_budget=0.0\n- repeated_line_rate=0.0\n- No high cross-section lexical overlap detected at threshold 0.18.\n\nLogical flow and coherence indicators:\n- transition_phrase_count=5\n- objective_method_budget_link_terms=8\n- Section order moves from applicant/context, plain summary and abstract, research plan, PPI, training/support, and budget where those sections are present.",
+    "parser_section": "Application Form Analysis",
+    "source_path": "Application Form Analysis",
+    "content_ltks": "application form structural analysis derived from parser output . use this single derived chunk as evidence for application form criteria af. * . section coverage and hierarchy : - raw content : words=1545 - document tables : words=788 formatting and structure indicators : - parser_sections_detected=2 - bullet_or_numbered_list_markers=6 - numbered_heading_like_lines=0 - table_like_budget_lines=0 - extracted_emphasis_markers=1 - parser limitation : bold/emphasis may be lost during text extraction ; use extracted headings , section labels , list markers , and table structure as the available evidence . duplication and repetition indicators : - duplicate_sentence_rate_excluding_budget=0.0 - repeated_line_rate=0.0 - no high cross-section lexical overlap detected at threshold 0.18 . logical flow and coherence indicators : - transition_phrase_count=5 - objective_method_budget_link_terms=8 - section order moves from applicant/context , plain summary and abstract , research plan , ppi , training/support , and budget where those sections are present .",
+    "content_sm_ltks": "application form structural analysis derived from parser output . use this single derived chunk as evidence for application form criteria af. * . section coverage and hierarchy : - raw content : words=1545 - document tables : words=788 formatting and structure indicators : - parser_sections_detected=2 - bullet_or_numbered_list_markers=6 - numbered_heading_like_lines=0 - table_like_budget_lines=0 - extracted_emphasis_markers=1 - parser limitation : bold/emphasis may be lost during text extraction ; use extracted headings , section labels , list markers , and table structure as the available evidence . duplication and repetition indicators : - duplicate_sentence_rate_excluding_budget=0.0 - repeated_line_rate=0.0 - no high cross-section lexical overlap detected at threshold 0.18 . logical flow and coherence indicators : - transition_phrase_count=5 - objective_method_budget_link_terms=8 - section order moves from applicant/context , plain summary and abstract , research plan , ppi , training/support , and budget where those sections are present .",
+    "title_tks": "application form analysis",
+    "token_count": 217,
+    "is_table": false,
+    "position": null
+  }
+}

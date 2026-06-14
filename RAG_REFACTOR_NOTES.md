@@ -127,6 +127,12 @@ PDF → all_type_parser(规则式解析→具名section JSON) → build_pool(切
 - **验证（live ES 8.11 via Docker）**：corpus 建成 22 篇(11 succ/11 unsucc, 2220 chunks)；few-shot 正确排除当前申请、优先 successful、训练查询命中训练段(sim 0.74-0.76)；端到端 `retrieval_used=True`/`fewshot_used=True`，6/6 stage2 prompt 注入了 calibration_examples；测试 18 passed/1 pre-existing fail；ES 关闭时优雅降级（few-shot 跳过、打分照常）。
 - **ES 容器**：`docker run -d --name grant-es -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false elasticsearch:8.11.3`；停 `docker stop grant-es`、起 `docker start grant-es`。建库：`ES_HOST=http://localhost:9200 python -m src.retrieval.indexer --recreate`。
 
+### 检索质量调优 A+B ✅ 已完成（2026-06-14）
+对真实申请实测后修两处检索噪声（均在检索层，不动 build_pool 契约/测试）：
+- **A 过滤碎块**：[indexer.py](src/retrieval/indexer.py) `_indexable_items` 在建索引前丢弃 <5 token 的碎块（如 "2."、"3. Literature"）。实测 166→141（去 25 个）。
+- **B 派生块按维度限定**：[retriever.py](src/retrieval/retriever.py) `_filter_derived` 把 3 个派生合成块限定到各自维度——`Application Context`→general、`Plain English NLP Analysis`→proposed_research(pr.1)、`Application Form Analysis`→application_form(af.*)，其余维度排除。evidence + fewshot 都过。实测后 training/wpcc 召回变干净（纯申请人原文），pr.1 去掉了乱入的 Application Form Analysis。
+- 注意：派生块本质是 build_pool 用代码算出的"合成证据块"（非 DB metadata），块头自带 "evidence for pr.1 / af.*" 说明，B 正是按此意图限定。测试仍 18 passed/1 pre-existing fail。
+
 ### (原计划) 步骤2：embedding 落地
 照搬 [file_parse.py `execute_insert_process`](../LLM_agent_course/S2_llm/swxy/backend/app/service/core/file_parse.py) 流水线：parse→build_pool→对每 chunk `generate_embedding`(本地ST)→先存内存。
 
