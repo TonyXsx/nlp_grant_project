@@ -3,21 +3,21 @@ All-Type Parser
 
 Entry point for parsing any grant application file into the unified JSON format.
 
-Pipeline for PDF files:
-  1. fellowships_parser  — blue-box fellowship format (NIHR DF/AF)
-     → if result is non-empty, done.
-  2. RfPB_parser         — RfPB format (fast pre-check on page 1)
-     → if result is non-empty, done.
-  3. pdf_parser          — generic big-box PDF format
-     → if result is non-empty, done.
-  4. RfPB_parser         — second attempt as fallback
-     → if result is non-empty, done.
-  5. llm_fallback_parser — last resort: pdfplumber text + glm-ocr → qwen
+Acceptance is by a CONTENT-QUALITY gate (_parse_is_good), not "first non-empty":
+a parse must have real content (APPLICATION DETAILS / SUMMARY BUDGET), not just
+metadata. The first parser that passes the gate wins; if none does, the richest
+non-empty result is returned.
 
-Pipeline for DOCX files:
-  1. python-docx raw text extraction
-     → if >= MIN_CONTENT_CHARS, return as Raw Content.
-  2. llm_fallback_parser — if text too sparse (< MIN_CONTENT_CHARS)
+Pipeline for PDF files (DeepDOC is the final fallback):
+  1. fellowships_parser / pdf_parser / RfPB_parser  (rule-based, best-of)
+  2. deepdoc PDF fallback — CV layout + OCR + table + block-concat (flat output)
+
+Pipeline for DOCX/PPTX files:
+  - DeepDOC DOCX / PPT parser (final fallback)
+
+NOTE: the LLM fallback (llm_fallback_parser.py) is intentionally NOT wired into
+the pipeline anymore (it was Ollama-bound and dumped the whole doc into an LLM).
+The file is kept and `_try_llm_fallback` remains below for easy re-enabling.
 
 The output JSON always uses the same top-level keys as IC00458_after.json.
 Only keys for which content was found are included.
@@ -180,12 +180,16 @@ def _is_rfpb_pdf(pdf_path: str, n_lines: int = 2) -> bool:
         return False
 
 
-# ──────────────────────────── stage 5 — llm_fallback_parser ─────────────────
+# ──────────────── llm_fallback_parser — RETAINED BUT NOT IN THE PIPELINE ──────
+# Kept for easy re-enabling; no longer called by parse() (Ollama-bound + dumps
+# the whole document into an LLM). DeepDOC is the final fallback instead.
 
 def _try_llm_fallback(input_path: str) -> dict:
     """
     Last-resort parser: pdfplumber text → glm-ocr (image OCR) → qwen3.5:27b
     structured extraction via Ollama.  Also handles DOCX via python-docx.
+
+    NOTE: currently unused — not wired into parse(). See module docstring.
     """
     try:
         from .llm_fallback_parser import extract_all_sections
@@ -270,20 +274,14 @@ def parse(input_path: str) -> dict:
             if picked is not None:
                 return picked
 
-        # DeepDOC fallback (CV layout + OCR + table + block-concat)
+        # DeepDOC is the FINAL fallback (CV layout + OCR + table + block-concat).
         print("[all_type_parser] no rule-based parse passed the gate — trying DeepDOC fallback")
         picked = _accept("deepdoc PDF fallback", _try_deepdoc_pdf(input_path))
         if picked is not None:
             return picked
 
-        # LLM fallback (last resort): accept any non-empty result
-        print("[all_type_parser] DeepDOC thin — falling back to LLM parser (glm-ocr + qwen3.5:27b)")
-        llm_result = _try_llm_fallback(input_path)
-        if not _is_empty(llm_result):
-            print("[all_type_parser] ✓ llm_fallback_parser succeeded")
-            return llm_result
-
-        # Nothing passed the gate — return the richest non-empty candidate seen.
+        # Nothing passed the gate — return the richest non-empty result seen
+        # (includes DeepDOC's thin output: flat-but-real beats nothing).
         if candidates:
             best = max(candidates, key=lambda c: _content_stats(c[1])[0])
             print(f"[all_type_parser] no good parse; returning best candidate: {best[0]}")
@@ -292,51 +290,32 @@ def parse(input_path: str) -> dict:
         return {}
 
     elif ext in (".docx", ".doc"):
-        # DeepDOC DOCX parser directly (paragraphs + composed table content).
+        # DeepDOC DOCX parser is the final fallback (paragraphs + composed tables).
         print("[all_type_parser] DOCX — using DeepDOC DOCX parser")
         result = _try_deepdoc_docx(input_path)
         if _parse_is_good(result):
             chars, _ = _content_stats(result)
             print(f"[all_type_parser] ✓ deepdoc DOCX parser ({chars} content chars)")
-            return result
-
-        # LLM fallback when DeepDOC is thin/empty; keep DeepDOC result as candidate.
-        print("[all_type_parser] DeepDOC DOCX thin/empty — falling back to LLM parser")
-        llm_result = _try_llm_fallback(input_path)
-        if not _is_empty(llm_result):
-            print("[all_type_parser] ✓ llm_fallback_parser succeeded")
-            return llm_result
-        if not _is_empty(result):
-            print("[all_type_parser] LLM empty — returning DeepDOC DOCX result")
-            return result
-        print("[all_type_parser] ✗ all parsers returned empty")
-        return {}
+        elif not _is_empty(result):
+            print("[all_type_parser] deepdoc DOCX thin — returning it anyway (flat > nothing)")
+        else:
+            print("[all_type_parser] ✗ deepdoc DOCX returned empty")
+        return result
 
     elif ext in (".pptx", ".ppt"):
-        # PPTX: DeepDOC PPT parser, then LLM fallback
-        print("[all_type_parser] PowerPoint file — trying DeepDOC PPT parser")
+        # DeepDOC PPT parser is the final fallback.
+        print("[all_type_parser] PowerPoint file — using DeepDOC PPT parser")
         result = _try_deepdoc_pptx(input_path)
         if not _is_empty(result):
             print("[all_type_parser] ✓ deepdoc PPT parser succeeded")
-            return result
-
-        print("[all_type_parser] DeepDOC PPT empty — falling back to LLM parser")
-        result = _try_llm_fallback(input_path)
-        if not _is_empty(result):
-            print("[all_type_parser] ✓ llm_fallback_parser succeeded")
         else:
-            print("[all_type_parser] ✗ all parsers returned empty")
+            print("[all_type_parser] ✗ deepdoc PPT parser returned empty")
         return result
 
     else:
-        # Unknown format — try LLM directly
-        print(f"[all_type_parser] unsupported extension '{ext}' — trying LLM parser")
-        result = _try_llm_fallback(input_path)
-        if not _is_empty(result):
-            print("[all_type_parser] ✓ llm_fallback_parser succeeded")
-        else:
-            print("[all_type_parser] ✗ all parsers returned empty")
-        return result
+        # Unknown extension — DeepDOC handles pdf/docx/ppt only; nothing to do.
+        print(f"[all_type_parser] unsupported extension '{ext}' — no parser available")
+        return {}
 
 
 def parse_and_save(input_path: str, output_path: Optional[str] = None) -> str:
