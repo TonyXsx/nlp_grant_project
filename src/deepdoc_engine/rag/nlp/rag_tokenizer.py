@@ -86,6 +86,25 @@ class RagTokenizer:
             return False
         return bool(_CJK_RE.search(str(s)))
 
+    # --- CJK normalizers used by query.FulltextQueryer; no-ops for English ---
+    def tradi2simp(self, line):
+        # traditional → simplified Chinese; irrelevant for English text
+        return line if line is not None else ""
+
+    def strQ2B(self, line):
+        # full-width → half-width; convert if any full-width chars slip in
+        if not line:
+            return ""
+        out = []
+        for ch in str(line):
+            code = ord(ch)
+            if code == 0x3000:
+                code = 0x20
+            elif 0xFF01 <= code <= 0xFF5E:
+                code -= 0xFEE0
+            out.append(chr(code))
+        return "".join(out)
+
     # --- kept for interface compatibility (unused on the English path) ---
     def freq(self, tk):  # noqa: D401
         return 0
@@ -101,3 +120,5 @@ tag = tokenizer.tag
 is_chinese = tokenizer.is_chinese
 freq = tokenizer.freq
 addUserDict = tokenizer.addUserDict
+tradi2simp = tokenizer.tradi2simp
+strQ2B = tokenizer.strQ2B

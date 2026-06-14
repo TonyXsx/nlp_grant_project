@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import os
 import re
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from src.pool.build_pool import (
     APPLICATION_CONTEXT_SECTION,
@@ -432,6 +435,42 @@ def _build_scoped_application_text(
         return _build_full_application_text(pool_lookup, chunk_order), []
     ordered = sorted(first_order_by_section, key=first_order_by_section.get)
     return build_evidence_text(scoped_chunk_ids, pool_lookup, chunk_order), ordered
+
+
+def _build_current_retriever(pool_lookup, doc_id):
+    """Embed the current application's chunks into an ephemeral in-memory store
+    for hybrid evidence retrieval. Returns (conn, index_name) or None on any
+    failure (missing sentence-transformers, model download offline, etc.) so the
+    caller falls back to full-text scoring."""
+    try:
+        from src.retrieval.indexer import build_index_from_pool
+        conn, index_name, _dim = build_index_from_pool(pool_lookup, doc_id=doc_id)
+        return conn, index_name
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("retrieval index build failed (%s); using full text", exc)
+        return None
+
+
+def _retrieval_scope(retriever, rubric_section, pool_lookup, chunk_order, top_k):
+    """(scoped_text, ordered_parser_sections) from hybrid retrieval over the
+    current-PDF store, or (None, None) to signal a full-text fallback."""
+    if not retriever:
+        return None, None
+    conn, index_name = retriever
+    try:
+        from src.retrieval.retriever import evidence_for_section
+        chunks = evidence_for_section(conn, index_name, rubric_section, top_k=top_k)
+        ids = [c["chunk_id"] for c in chunks if c.get("chunk_id") in pool_lookup]
+        if not ids:
+            return None, None
+        text = build_evidence_text(ids, pool_lookup, chunk_order)
+        sections = _dedupe_preserve_order(
+            [pool_lookup[i]["parser_section"] for i in ids]
+        )
+        return text, sections
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("evidence retrieval failed (%s); using full text", exc)
+        return None, None
 
 
 def _strip_rubric_for_prompt(rubric_sections: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1589,6 +1628,8 @@ def score_application_base(
     doc_id: str | None,
     scorer_client: Any,
     artifacts_dir: str | Path | None = None,
+    use_retrieval: bool = True,
+    evidence_top_k: int = 8,
 ) -> dict[str, Any]:
     doc_type = (application.get("doc_type") or "").lower()
     excluded_sections = OVERALL_EXCLUDED_SECTIONS_BY_DOC_TYPE.get(doc_type, set())
@@ -1668,13 +1709,24 @@ def score_application_base(
             "missing_signals_after": list(belief_state["missing_signals"]),
         })
 
+    # Hybrid evidence retrieval over an ephemeral in-memory index of the current
+    # application (reuses swxy's Dealer). None → full-text fallback.
+    retriever = _build_current_retriever(pool_lookup, doc_id or "current") if use_retrieval else None
+    retrieval_used = False
+
     stage2_raw_by_section: dict[str, str] = {}
     stage2_scope_by_section: dict[str, list[str]] = {}
     sections: list[dict[str, Any]] = []
     for rubric_section in rubric_sections:
         section_key = rubric_section["section_key"]
-        scoped_text = _build_full_application_text(pool_lookup, chunk_order)
-        scoped_parser_sections: list[str] = []
+        scoped_text, scoped_parser_sections = _retrieval_scope(
+            retriever, rubric_section, pool_lookup, chunk_order, evidence_top_k
+        )
+        if scoped_text is None:
+            scoped_text = _build_full_application_text(pool_lookup, chunk_order)
+            scoped_parser_sections = []
+        else:
+            retrieval_used = True
         stage2_scope_by_section[section_key] = scoped_parser_sections
         messages = build_final_scoring_messages(
             rubric_section=rubric_section,
@@ -1755,7 +1807,10 @@ def score_application_base(
         "doc_id": doc_id or "unknown",
         "run_info": {
             "ran_at_utc": dt.datetime.now(dt.UTC).isoformat().replace("+00:00", "Z"),
-            "retrieval_method": "all_sections_belief_then_fulltext_scoring",
+            "retrieval_method": (
+                "belief_then_inmem_hybrid_retrieval_scoring"
+                if retrieval_used else "all_sections_belief_then_fulltext_scoring"
+            ),
             "scorer_model": getattr(scorer_client, "model_name", "unknown"),
         },
         "pool_size": len(pool_lookup),

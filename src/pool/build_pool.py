@@ -2,11 +2,50 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
+# ── make the vendored DeepDOC engine (src/deepdoc_engine) importable ──────────
+_SRC = Path(__file__).resolve().parent.parent  # …/src
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+# Reuse swxy's chunking primitives wholesale (token-budget merge, table
+# tokenisation, BM25-field tokenisation, bullet/heading detection).
+from deepdoc_engine.rag.nlp import (  # noqa: E402
+    naive_merge,
+    tokenize,
+    tokenize_table,
+    bullets_category,
+    not_bullet,
+    BULLET_PATTERN,
+)
+from deepdoc_engine.rag.nlp import rag_tokenizer  # noqa: E402
+from deepdoc_engine.rag.utils import num_tokens_from_string  # noqa: E402
+
+# Kept for backward-compatible imports (pipeline.py imports MAX_CHARS); no longer
+# used for chunking — chunk size is now token-based (CHUNK_TOKEN_NUM).
 MAX_CHARS = 1200
+# Token budget per chunk. swxy default is 128; we use a larger budget because
+# rubric-signal retrieval benefits from slightly bigger evidence units.
+CHUNK_TOKEN_NUM = 256
+# English sentence/clause delimiters (swxy default was CJK punctuation). Chunk
+# boundaries fall after these so sentences are never cut mid-way.
+DELIMITER = "\n.!?;:"
+# Hard safety cap (characters) for a single delimiter-free run of text.
+_HARD_CHAR_CAP = 4000
+
+# Sentence splitter: split *after* any delimiter char, keeping it attached to
+# the preceding sentence. (DELIMITER chars are all char-class-safe.)
+_SENT_SPLIT_RE = re.compile(r"(?<=[\n.!?;:])")
+# DeepDOC position tag format from RAGFlowPdfParser._line_tag:
+#   @@<page(-page)>\t<x0>\t<x1>\t<top>\t<bottom>##
+_POS_TAG_RE = re.compile(r"@@[0-9-]+\t[0-9.\t]+##")
+# Detect an HTML table (DeepDOC restores budget/method tables as <table> HTML).
+_TABLE_RE = re.compile(r"<table[\s>]", re.IGNORECASE)
+
 APPLICATION_DETAILS_KEY = "APPLICATION DETAILS"
 SUMMARY_BUDGET_KEY = "SUMMARY BUDGET"
 APPLICATION_CONTEXT_SECTION = "Application Context"
@@ -20,6 +59,15 @@ class PoolChunk:
     text: str
     parser_section: str
     source_path: str
+    # ── swxy-style enrichment (used by hybrid BM25 + dense retrieval) ──
+    content_ltks: str = ""          # coarse-grained tokens (BM25 main field)
+    content_sm_ltks: str = ""       # fine-grained tokens (BM25 secondary)
+    title_tks: str = ""             # tokenised section/title context
+    token_count: int = 0
+    is_table: bool = False
+    # DeepDOC layout positions [(page, x0, x1, top, bottom), ...] when available
+    # (groundwork for highlighting evidence on the source PDF).
+    position: Optional[list] = None
 
 
 def _slug_initials(name: str) -> str:
@@ -38,26 +86,101 @@ def _stringify_leaf(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2).strip()
 
 
-def _split_long_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
-    clean = text.strip()
-    if not clean:
-        return []
-    if len(clean) <= max_chars:
-        return [clean]
+def _extract_positions(text: str) -> tuple[str, Optional[list]]:
+    """Pull DeepDOC ``@@page\\tx0\\tx1\\ttop\\tbottom##`` tags out of ``text``.
 
-    paragraphs = [part.strip() for part in re.split(r"\n\s*\n+", clean) if part.strip()]
-    if len(paragraphs) <= 1:
-        return [clean[i:i + max_chars].strip() for i in range(0, len(clean), max_chars)]
+    Returns ``(clean_text, positions)`` where positions is a list of
+    ``(page, x0, x1, top, bottom)`` tuples, or ``None`` when no tags are present
+    (the rule-based parsers emit no positions). Stripping the tags also keeps the
+    text the LLM sees clean.
+    """
+    tags = _POS_TAG_RE.findall(text)
+    if not tags:
+        return text, None
+    positions: list = []
+    for tag in tags:
+        body = tag.strip("@").strip("#")
+        parts = body.split("\t")
+        if len(parts) < 5:
+            continue
+        try:
+            x0, x1, top, bottom = (float(parts[1]), float(parts[2]),
+                                   float(parts[3]), float(parts[4]))
+            for p in parts[0].split("-"):
+                positions.append((int(p), x0, x1, top, bottom))
+        except (ValueError, IndexError):
+            continue
+    clean = _POS_TAG_RE.sub("", text).strip()
+    return clean, (positions or None)
+
+
+def _split_sentences(text: str, delimiter: str = DELIMITER) -> list[str]:
+    """Split text into delimiter-bounded pieces, keeping the delimiter attached
+    so a chunk boundary never cuts mid-sentence. Mirrors how swxy's parsers emit
+    small section pieces that ``naive_merge`` then merges by token budget."""
+    if not text:
+        return []
+    pieces: list[str] = []
+    for part in _SENT_SPLIT_RE.split(text):
+        part = part.strip()
+        if not part:
+            continue
+        # Trailing space so naive_merge (which concatenates pieces with no
+        # separator) keeps sentences readable instead of "fused.LikeThis".
+        if len(part) > _HARD_CHAR_CAP:  # safety: a single delimiter-free run
+            for i in range(0, len(part), _HARD_CHAR_CAP):
+                seg = part[i:i + _HARD_CHAR_CAP].strip()
+                if seg:
+                    pieces.append(seg + " ")
+        else:
+            pieces.append(part + " ")
+    return pieces
+
+
+def _heading_flags(pieces: list[str]) -> list[bool]:
+    """Mark which pieces are headings/numbered items, using swxy's BULLET_PATTERN
+    + bullets_category (picks the dominant bullet style in this text)."""
+    if not pieces:
+        return []
+    bull = bullets_category(pieces)
+    if bull < 0:
+        return [False] * len(pieces)
+    pats = BULLET_PATTERN[bull]
+    flags = []
+    for piece in pieces:
+        s = piece.strip()
+        is_head = any(re.match(p, s) for p in pats) and not not_bullet(s)
+        flags.append(is_head)
+    return flags
+
+
+def _chunk_text(text: str, chunk_token_num: int = CHUNK_TOKEN_NUM,
+                delimiter: str = DELIMITER) -> list[str]:
+    """Token-aware, sentence-respecting, heading-bound chunking.
+
+    1. split into sentence pieces (no mid-sentence cuts);
+    2. group so each heading starts a new group (binds a heading to its body and
+       prevents the next heading from being swallowed into the previous body);
+    3. ``naive_merge`` each group into <= chunk_token_num token chunks.
+    """
+    pieces = _split_sentences(text, delimiter)
+    if not pieces:
+        return []
+    flags = _heading_flags(pieces)
+    groups: list[list[str]] = []
+    current: list[str] = []
+    for piece, is_head in zip(pieces, flags):
+        if is_head and current:
+            groups.append(current)
+            current = []
+        current.append(piece)
+    if current:
+        groups.append(current)
 
     chunks: list[str] = []
-    for paragraph in paragraphs:
-        if len(paragraph) <= max_chars:
-            chunks.append(paragraph)
-            continue
-        for idx in range(0, len(paragraph), max_chars):
-            piece = paragraph[idx:idx + max_chars].strip()
-            if piece:
-                chunks.append(piece)
+    for group in groups:
+        merged = naive_merge([(s, "") for s in group], chunk_token_num, delimiter)
+        chunks.extend(c.strip() for c in merged if c and c.strip())
     return chunks
 
 
@@ -380,22 +503,58 @@ def build_chunk_pool(application: dict[str, Any], max_chars: int = MAX_CHARS) ->
                 return section_slug_map[section_name]
             suffix += 1
 
+    def _record(d: dict, *, is_table: bool, position) -> dict:
+        return {
+            "text": d["content_with_weight"],
+            "parser_section": "",  # filled by caller
+            "source_path": "",     # filled by caller
+            "content_ltks": d.get("content_ltks", ""),
+            "content_sm_ltks": d.get("content_sm_ltks", ""),
+            "title_tks": d.get("title_tks", ""),
+            "token_count": num_tokens_from_string(d["content_with_weight"]),
+            "is_table": is_table,
+            "position": position,
+        }
+
     def add_leaf(parser_section: str, source_path: str, text: str, *, split: bool = True) -> None:
+        if not text or not text.strip():
+            return
+        # Title/section context for BM25 title field + chunk doc template.
+        doc_tpl = {
+            "docnm_kwd": parser_section,
+            "title_tks": rag_tokenizer.tokenize(parser_section),
+        }
+
+        records: list[dict] = []
+        if split and _TABLE_RE.search(text):
+            # Restore the table as its own chunk(s); HTML kept as the chunk text
+            # (better for budget.py and for the scorer than flattened cells).
+            for d in tokenize_table([((None, text), None)], dict(doc_tpl), True):
+                records.append(_record(d, is_table=True, position=None))
+        else:
+            clean, positions = _extract_positions(text)  # strip + capture @@..## tags
+            chunk_strs = _chunk_text(clean) if split else (
+                [clean.strip()] if clean.strip() else []
+            )
+            for ck in chunk_strs:
+                d = dict(doc_tpl)
+                tokenize(d, ck, True)  # → content_with_weight / content_ltks / content_sm_ltks
+                records.append(_record(d, is_table=False, position=positions))
+
+        if not records:
+            return
+
         slug = get_slug(parser_section)
         section_counters[slug] = section_counters.get(slug, 0) + 1
         base_id = f"{slug}__{section_counters[slug]:03d}"
-        pieces = _split_long_text(text, max_chars=max_chars) if split else [text.strip()]
-        ids: list[str] = []
-        if len(pieces) == 1:
-            ids = [base_id]
-        else:
-            ids = [f"{base_id}_{chr(97 + idx)}" for idx in range(len(pieces))]
-        for chunk_id, piece in zip(ids, pieces):
-            pool_lookup[chunk_id] = {
-                "text": piece,
-                "parser_section": parser_section,
-                "source_path": source_path,
-            }
+        ids = [base_id] if len(records) == 1 else [
+            f"{base_id}_{chr(97 + idx)}" for idx in range(len(records))
+        ]
+        for chunk_id, rec in zip(ids, records):
+            rec = dict(rec)
+            rec["parser_section"] = parser_section
+            rec["source_path"] = source_path
+            pool_lookup[chunk_id] = rec
             section_chunk_ids.setdefault(parser_section, []).append(chunk_id)
 
     combined_context_entries: list[tuple[str, str]] = []

@@ -37,53 +37,86 @@ if str(_SRC) not in sys.path:
 logger = logging.getLogger(__name__)
 
 
+# Token budget / delimiter used only to assemble the parser's section pieces into
+# readable Raw Content; build_pool re-chunks this downstream, so exact values are
+# not critical. Kept consistent with build_pool's English settings.
+_CHUNK_TOKEN_NUM = 256
+_DELIMITER = "\n.!?;:"
+
+
 def _dummy_callback(prog=None, msg: str = "") -> None:
     """No-op progress callback expected by the DeepDOC parsers."""
     return None
 
 
-def _as_application_details(text: str) -> dict:
+def _table_htmls(tables) -> list:
+    """Pull restored <table> HTML strings out of a DeepDOC parser's tables list.
+
+    Each table item is ``((img, content), positions)``; for tables ``content``
+    is an HTML string, for figures it is a list of caption texts — we keep only
+    the HTML tables (e.g. budget / methods tables)."""
+    out: list = []
+    for item in (tables or []):
+        content = None
+        try:
+            (_img, content), _poss = item
+        except Exception:
+            try:
+                _img, content = item
+            except Exception:
+                continue
+        if isinstance(content, str) and "<table" in content.lower():
+            out.append(content)
+    return out
+
+
+def _as_application_details(text: str, table_htmls: list | None = None) -> dict:
     text = (text or "").strip()
-    if not text:
+    details: dict = {}
+    if text:
+        details["Raw Content"] = text
+    if table_htmls:
+        # Each table becomes its own leaf → build_pool turns it into a table chunk.
+        details["Document Tables"] = {
+            f"Table {i + 1}": html for i, html in enumerate(table_htmls)
+        }
+    if not details:
         return {}
-    return {"APPLICATION DETAILS": {"Raw Content": text}}
+    return {"APPLICATION DETAILS": details}
 
 
 def parse_pdf(pdf_path: str) -> dict:
-    """Run the full DeepDOC PDF pipeline and return the unified JSON dict."""
-    try:
-        from deepdoc_engine.rag.app.naive import chunk
+    """Run the full DeepDOC PDF pipeline and return the unified JSON dict.
 
-        # section_only=True returns the merged section strings (post layout +
-        # table + block-concatenation) without the embedding/tokenize step.
-        sections = chunk(
-            pdf_path,
-            from_page=0,
-            to_page=100000,
-            lang="English",
-            callback=_dummy_callback,
-            section_only=True,
+    Uses the ``Pdf`` wrapper directly (one parse) so we get both the text
+    sections and the restored HTML tables; tables are emitted under
+    ``APPLICATION DETAILS > Document Tables`` for build_pool to chunk separately.
+    """
+    try:
+        from deepdoc_engine.rag.app.naive import Pdf
+        from deepdoc_engine.rag.nlp import naive_merge
+
+        sections, tables = Pdf()(
+            pdf_path, from_page=0, to_page=100000, callback=_dummy_callback
         )
-        text = "\n\n".join(s for s in (sections or []) if isinstance(s, str) and s.strip())
-        return _as_application_details(text)
+        chunks = naive_merge(sections, _CHUNK_TOKEN_NUM, _DELIMITER)
+        text = "\n\n".join(c for c in (chunks or []) if isinstance(c, str) and c.strip())
+        return _as_application_details(text, _table_htmls(tables))
     except Exception as e:  # noqa: BLE001 - fallback must never raise
         logger.warning("[deepdoc_fallback] PDF parse failed: %s", e)
         return {}
 
 
 def parse_docx(docx_path: str) -> dict:
-    """Run the DeepDOC DOCX parser and return the unified JSON dict."""
+    """Run the DeepDOC DOCX parser (paragraphs + composed table HTML)."""
     try:
-        from deepdoc_engine.rag.app.naive import chunk
+        from deepdoc_engine.rag.app.naive import Docx
+        from deepdoc_engine.rag.nlp import naive_merge_docx
 
-        sections = chunk(
-            docx_path,
-            lang="English",
-            callback=_dummy_callback,
-            section_only=True,
-        )
-        text = "\n\n".join(s for s in (sections or []) if isinstance(s, str) and s.strip())
-        return _as_application_details(text)
+        sections, tables = Docx()(docx_path, None)
+        chunks, _images = naive_merge_docx(sections, _CHUNK_TOKEN_NUM, _DELIMITER)
+        text = "\n\n".join(c for c in (chunks or []) if isinstance(c, str) and c.strip())
+        return _as_application_details(text, _table_htmls(tables))
     except Exception as e:  # noqa: BLE001
         logger.warning("[deepdoc_fallback] DOCX parse failed: %s", e)
         return {}
