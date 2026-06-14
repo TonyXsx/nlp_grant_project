@@ -2675,5 +2675,146 @@
       setInterval(pollStatus, 8000);
     })();
   </script>
+
+  <!-- ── Grounded QA chat widget (single-doc / scoring / corpus) ───────────── -->
+  <style>
+    #qaFab { position: fixed; right: 24px; bottom: 24px; z-index: 1000;
+      background: var(--brand, #1d4ed8); color: #fff; border: none; border-radius: 999px;
+      padding: 12px 18px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(29,78,216,.4); }
+    #qaPanel { position: fixed; right: 24px; bottom: 80px; z-index: 1000; width: 400px; max-width: 92vw;
+      height: 560px; max-height: 78vh; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22); display: none; flex-direction: column; overflow: hidden; }
+    #qaPanel.open { display: flex; }
+    .qa-head { padding: 12px 14px; border-bottom: 1px solid #eef1f5; display: flex; align-items: center; gap: 8px; }
+    .qa-head h4 { margin: 0; font-size: 14px; flex: 1; }
+    .qa-head select { font-size: 12px; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 8px; }
+    .qa-close { border: none; background: none; font-size: 20px; cursor: pointer; color: #6b7280; }
+    #qaMsgs { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; }
+    .qa-msg { max-width: 88%; padding: 9px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+    .qa-msg.user { align-self: flex-end; background: var(--brand, #1d4ed8); color: #fff; }
+    .qa-msg.bot { align-self: flex-start; background: #fff; border: 1px solid #e5e7eb; color: #111827; }
+    .qa-mode { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+      color: #6b7280; background: #eef2ff; border-radius: 6px; padding: 1px 6px; margin-bottom: 4px; }
+    .qa-cites { margin-top: 8px; border-top: 1px dashed #e5e7eb; padding-top: 6px; }
+    .qa-cite { font-size: 11px; color: #374151; margin-top: 4px; }
+    .qa-cite b { color: var(--brand, #1d4ed8); }
+    .qa-cite .src { color: #6b7280; }
+    .qa-foot { padding: 10px; border-top: 1px solid #eef1f5; display: flex; gap: 8px; }
+    .qa-foot input { flex: 1; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; }
+    .qa-foot button { background: var(--brand, #1d4ed8); color: #fff; border: none; border-radius: 10px; padding: 0 14px; font-weight: 700; cursor: pointer; }
+    .qa-foot button:disabled { opacity: .5; cursor: default; }
+  </style>
+  <button id="qaFab" type="button">💬 Ask about this application</button>
+  <div id="qaPanel">
+    <div class="qa-head">
+      <h4>Assessment Q&amp;A</h4>
+      <select id="qaRole" title="Your role">
+        <option value="reviewer">Reviewer</option>
+        <option value="applicant">Applicant</option>
+        <option value="committee">Committee</option>
+      </select>
+      <button class="qa-close" id="qaClose" type="button">×</button>
+    </div>
+    <div id="qaMsgs"></div>
+    <div class="qa-foot">
+      <input id="qaInput" type="text" placeholder="e.g. Why did Proposed Research score that?" autocomplete="off" />
+      <button id="qaSend" type="button">Send</button>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const fab = document.getElementById('qaFab');
+      const panel = document.getElementById('qaPanel');
+      const msgs = document.getElementById('qaMsgs');
+      const input = document.getElementById('qaInput');
+      const send = document.getElementById('qaSend');
+      const roleSel = document.getElementById('qaRole');
+      const history = [];
+
+      function getJobId() {
+        try {
+          const raw = JSON.parse(localStorage.getItem('features_result') || '{}');
+          const docId = raw?.features_json?.doc_id || raw?.doc_id || '';
+          const m = String(docId).match(/^[a-f0-9]{12}/);
+          return m ? m[0] : '';
+        } catch (e) { return ''; }
+      }
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      }
+
+      function addUser(text) {
+        const d = document.createElement('div');
+        d.className = 'qa-msg user';
+        d.textContent = text;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function addBot(out) {
+        const d = document.createElement('div');
+        d.className = 'qa-msg bot';
+        let html = (out.mode ? `<span class="qa-mode">${esc(out.mode)}</span><br>` : '') + esc(out.answer || '');
+        const cites = out.citations || [];
+        if (cites.length) {
+          html += '<div class="qa-cites"><b style="font-size:11px;">Sources</b>';
+          cites.forEach(c => {
+            const pages = (c.pages && c.pages.length) ? ' · p.' + c.pages.join(', ') : '';
+            const appn = c.application ? ` · ${esc(c.application)}` : '';
+            html += `<div class="qa-cite"><b>[${c.n}]</b> <span class="src">${esc(c.section || '')}${pages}${appn}</span><br>${esc((c.text || '').slice(0, 220))}</div>`;
+          });
+          html += '</div>';
+        }
+        d.innerHTML = html;
+        msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function addNote(text) {
+        const d = document.createElement('div');
+        d.className = 'qa-msg bot'; d.style.color = '#b45309';
+        d.textContent = text; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      async function ask() {
+        const q = input.value.trim();
+        if (!q) return;
+        const jobId = getJobId();
+        if (!jobId) { addNote('Q&A is available for applications processed via Upload.'); return; }
+        addUser(q); input.value = '';
+        history.push({ role: 'user', content: q });
+        send.disabled = true;
+        const thinking = document.createElement('div');
+        thinking.className = 'qa-msg bot'; thinking.textContent = '…'; msgs.appendChild(thinking);
+        try {
+          const res = await fetch('/ask', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_id: jobId, question: q, history: history.slice(-6), role: roleSel.value }),
+          });
+          const out = await res.json();
+          thinking.remove();
+          if (!res.ok) { addNote(out.error || 'Request failed'); }
+          else { addBot(out); history.push({ role: 'assistant', content: out.answer || '' }); }
+        } catch (e) {
+          thinking.remove(); addNote('Network error: ' + e.message);
+        } finally {
+          send.disabled = false; input.focus();
+        }
+      }
+
+      fab.addEventListener('click', () => {
+        panel.classList.toggle('open');
+        if (panel.classList.contains('open')) {
+          if (!msgs.children.length) {
+            addNote('Ask about this application\'s content, why it scored as it did, or (as Committee) how it compares to other applications.');
+          }
+          input.focus();
+        }
+      });
+      document.getElementById('qaClose').addEventListener('click', () => panel.classList.remove('open'));
+      send.addEventListener('click', ask);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+    })();
+  </script>
 </body>
 </html>

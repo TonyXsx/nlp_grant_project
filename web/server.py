@@ -316,6 +316,49 @@ def result(job_id: str):
         return jsonify(job["result"])
 
 
+def _load_result(job_id: str) -> dict | None:
+    """Fetch a scored result by job_id: in-memory job first, then disk."""
+    with JOBS_LOCK:
+        job = JOBS.get(job_id)
+        if job and job.get("result"):
+            return job["result"].get("features_json")
+    p = RESULT_DIR / f"{job_id}.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+    return None
+
+
+@app.post("/ask")
+def ask():
+    """Grounded QA over a scored application.
+
+    Body: {job_id, question, history?: [{role,content}], role?: reviewer|applicant|committee}
+    Returns: {answer, mode, citations:[{n,text,section,pages,application?}]}.
+    """
+    body = request.get_json(silent=True) or {}
+    job_id = (body.get("job_id") or "").strip()
+    question = (body.get("question") or "").strip()
+    history = body.get("history") or []
+    role = (body.get("role") or "reviewer").strip().lower()
+    if not job_id or not question:
+        return jsonify({"error": "job_id and question are required"}), 400
+
+    result = _load_result(job_id)
+    if not result:
+        return jsonify({"error": "unknown or unready job"}), 404
+
+    try:
+        from src.qa.qa_service import answer_question
+        out = answer_question(result, question, job_id=job_id, history=history, role=role)
+        return jsonify(out)
+    except Exception as exc:
+        traceback.print_exc()
+        return jsonify({"error": str(exc)}), 500
+
+
 @app.get("/history")
 def history():
     import re as _re
