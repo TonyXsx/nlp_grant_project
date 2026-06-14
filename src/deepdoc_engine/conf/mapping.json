@@ -157,6 +157,17 @@
       },
       {
         "dense_vector": {
+          "match": "*_384_vec",
+          "mapping": {
+            "type": "dense_vector",
+            "index": true,
+            "similarity": "cosine",
+            "dims": 384
+          }
+        }
+      },
+      {
+        "dense_vector": {
           "match": "*_512_vec",
           "mapping": {
             "type": "dense_vector",

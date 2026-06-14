@@ -95,12 +95,19 @@ def score_application(
     artifacts_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     scorer_client = scorer or _Scorer(model_name=OLLAMA_MODEL, host=OLLAMA_HOST)
+    # Retrieval config (env-driven, opt-in for the ES few-shot corpus):
+    #   GRANT_USE_RETRIEVAL=0  → disable hybrid evidence retrieval (full-text)
+    #   GRANT_CORPUS_INDEX=grant_corpus → enable few-shot from the ES corpus
+    use_retrieval = os.environ.get("GRANT_USE_RETRIEVAL", "1") != "0"
+    corpus_index = os.environ.get("GRANT_CORPUS_INDEX") or None
     return score_application_base(
         application=application,
         criteria_path=criteria_path,
         doc_id=doc_id,
         scorer_client=scorer_client,
         artifacts_dir=artifacts_dir,
+        use_retrieval=use_retrieval,
+        corpus_index=corpus_index,
     )
 
 

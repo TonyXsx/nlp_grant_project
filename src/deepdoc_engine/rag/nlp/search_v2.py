@@ -82,7 +82,8 @@ class Dealer:
                       ["docnm_kwd", "content_ltks", "kb_id", "img_id", "title_tks", "important_kwd", "position_int",
                        "doc_id", "page_num_int", "top_int", "create_timestamp_flt", "knowledge_graph_kwd",
                        "question_kwd", "question_tks",
-                       "available_int", "content_with_weight", PAGERANK_FLD, TAG_FLD])
+                       "available_int", "content_with_weight", "success_label", "parser_section",
+                       PAGERANK_FLD, TAG_FLD])
         kwds = set([])
 
         qst = req.get("question", "")
@@ -359,6 +360,9 @@ class Dealer:
                 "term_similarity": tsim[i],
                 "vector": chunk.get(vector_column, zero_vector),
                 "positions": position_int,
+                # grant-project custom fields (present on corpus docs)
+                "success_label": chunk.get("success_label", ""),
+                "parser_section": chunk.get("parser_section", ""),
             }
             if highlight and sres.highlight:
                 if id in sres.highlight:

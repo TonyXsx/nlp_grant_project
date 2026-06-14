@@ -451,6 +451,42 @@ def _build_current_retriever(pool_lookup, doc_id):
         return None
 
 
+def _build_corpus_retriever(corpus_index):
+    """Connect to the persistent ES corpus for few-shot retrieval. Returns
+    (es_conn, corpus_index) or None when no index is requested or ES is
+    unreachable (few-shot is then silently skipped — scoring is unaffected)."""
+    if not corpus_index:
+        return None
+    try:
+        from deepdoc_engine.rag.utils.es_conn import ESConnection
+        es = ESConnection()
+        if not es.es.ping():
+            logger.warning("ES not reachable; skipping few-shot examples")
+            return None
+        return es, corpus_index
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("corpus retriever unavailable (%s); skipping few-shot", exc)
+        return None
+
+
+def _fewshot_examples(corpus_retriever, rubric_section, current_app_id, n):
+    """Few exemplar texts from SUCCESSFUL corpus applications for this rubric
+    section, excluding the current application. [] on any failure."""
+    if not corpus_retriever or n <= 0:
+        return []
+    es_conn, corpus_index = corpus_retriever
+    try:
+        from src.retrieval.retriever import fewshot_for_section
+        chunks = fewshot_for_section(
+            es_conn, corpus_index, rubric_section,
+            current_app_id=current_app_id, n=n, success_label="successful",
+        )
+        return [c["content_with_weight"] for c in chunks if c.get("content_with_weight")]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("few-shot retrieval failed (%s); skipping", exc)
+        return []
+
+
 def _retrieval_scope(retriever, rubric_section, pool_lookup, chunk_order, top_k):
     """(scoped_text, ordered_parser_sections) from hybrid retrieval over the
     current-PDF store, or (None, None) to signal a full-text fallback."""
@@ -926,6 +962,7 @@ def build_final_scoring_messages(
     final_belief_state: dict[str, Any],
     scoped_application_text: str,
     scoped_parser_sections: list[str],
+    examples: list[str] | None = None,
 ) -> list[dict[str, str]]:
     scope_note = (
         f"Application text is scoped to parser sections: {scoped_parser_sections}."
@@ -979,11 +1016,23 @@ def build_final_scoring_messages(
         "If evidence is missing, give a low score (0-3), not a high one (4-5).\n"
         "Keep pros and drawbacks concise and evidence-based."
     )
+    examples = [e for e in (examples or []) if e and e.strip()]
+    if examples:
+        system += (
+            "\n`calibration_examples` contains excerpts from PREVIOUSLY SUCCESSFUL "
+            "applications for the same rubric section, retrieved from a reference corpus. "
+            "Use them ONLY to calibrate what strong (4-5) evidence looks like for this "
+            "section. They are NOT this applicant's text — never cite them as evidence, "
+            "never copy them, and do not let their presence inflate scores."
+        )
     user_payload = {
         "application_text": scoped_application_text,
         "criteria": stripped_criteria,
         "final_belief_state": final_belief_state,
     }
+    if examples:
+        # keep each exemplar short to bound prompt size
+        user_payload["calibration_examples"] = [e.strip()[:800] for e in examples]
     example_sub = rubric_section["sub_criteria"][0] if rubric_section["sub_criteria"] else {}
     example_sub_id = example_sub.get("sub_id") or (target_sub_ids[0] if target_sub_ids else "g.4")
     example_signal_scores = {
@@ -1630,6 +1679,8 @@ def score_application_base(
     artifacts_dir: str | Path | None = None,
     use_retrieval: bool = True,
     evidence_top_k: int = 8,
+    corpus_index: str | None = None,
+    fewshot_n: int = 2,
 ) -> dict[str, Any]:
     doc_type = (application.get("doc_type") or "").lower()
     excluded_sections = OVERALL_EXCLUDED_SECTIONS_BY_DOC_TYPE.get(doc_type, set())
@@ -1712,7 +1763,10 @@ def score_application_base(
     # Hybrid evidence retrieval over an ephemeral in-memory index of the current
     # application (reuses swxy's Dealer). None → full-text fallback.
     retriever = _build_current_retriever(pool_lookup, doc_id or "current") if use_retrieval else None
+    # Persistent ES corpus for few-shot exemplars (opt-in via corpus_index).
+    corpus_retriever = _build_corpus_retriever(corpus_index)
     retrieval_used = False
+    fewshot_used = False
 
     stage2_raw_by_section: dict[str, str] = {}
     stage2_scope_by_section: dict[str, list[str]] = {}
@@ -1728,12 +1782,18 @@ def score_application_base(
         else:
             retrieval_used = True
         stage2_scope_by_section[section_key] = scoped_parser_sections
+        examples = _fewshot_examples(
+            corpus_retriever, rubric_section, doc_id or "current", fewshot_n
+        )
+        if examples:
+            fewshot_used = True
         messages = build_final_scoring_messages(
             rubric_section=rubric_section,
             stripped_criteria=stripped_criteria,
             final_belief_state=belief_state,
             scoped_application_text=scoped_text,
             scoped_parser_sections=scoped_parser_sections,
+            examples=examples,
         )
         schema = build_scoring_schema(rubric_section, all_chunk_ids)
         try:
@@ -1826,6 +1886,8 @@ def score_application_base(
             "excluded_sub_ids": sorted(excluded_sub_ids),
             "stage1_section_updates": stage1_updates,
             "json_retry_events": json_retry_events,
+            "retrieval_used": retrieval_used,
+            "fewshot_used": fewshot_used,
             "artifacts": artifact_paths,
         },
     }

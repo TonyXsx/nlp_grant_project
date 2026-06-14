@@ -18,19 +18,23 @@ if str(_SRC) not in sys.path:
 from deepdoc_engine.rag.nlp.search_v2 import Dealer  # noqa: E402
 
 
+# Cap the query length: a long query bloats the ES query_string clause count
+# (terms x fields) past ES's maxClauseCount, and adds little retrieval value.
+_QUERY_MAX_WORDS = 50
+
+
 def section_query(rubric_section: dict[str, Any]) -> str:
-    """Build a retrieval query from a rubric section: its name + every
-    sub-criterion name/definition + signal text. This is the section's
-    information need expressed as one query."""
+    """Build a concise retrieval query from a rubric section: its name + every
+    sub-criterion name + signal text (definitions are omitted — they are long
+    and dilute the query). Capped to a bounded number of words."""
     parts: list[str] = [rubric_section.get("human_name", "")]
     for sub in rubric_section.get("sub_criteria", []):
         parts.append(sub.get("name", ""))
-        if sub.get("definition"):
-            parts.append(sub["definition"])
         for sig in sub.get("signals", []):
             if sig.get("text"):
                 parts.append(sig["text"])
-    return " ".join(p for p in parts if p).strip()
+    words = " ".join(p for p in parts if p).split()
+    return " ".join(words[:_QUERY_MAX_WORDS]).strip()
 
 
 def evidence_for_section(

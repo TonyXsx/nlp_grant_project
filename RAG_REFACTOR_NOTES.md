@@ -115,7 +115,19 @@ PDF → all_type_parser(规则式解析→具名section JSON) → build_pool(切
 - **产出 BM25 字段**：`tokenize_chunks` 生成 `content_ltks/content_sm_ltks/title_tks`（承上启下：有分词字段，混合检索才能跑）。
 - `PoolChunk` 新增字段：`token_count, content_ltks, content_sm_ltks, position, is_table`。
 
-### 步骤2：embedding 落地
+### 步骤2+3：embedding 入库 + 混合检索（双库）✅ 已完成（2026-06-14）
+**实现**：复用 swxy 的 `Dealer`（混合检索 BM25+向量+融合+rerank）跑在两个库上。
+- **本地向量后端**：重写 [model.py](src/deepdoc_engine/rag/nlp/model.py) → 本地 sentence-transformers（`generate_embedding` 用 `BAAI/bge-small-en-v1.5` 384维；`rerank_similarity` 用 `cross-encoder/ms-marco-MiniLM-L-6-v2`，sigmoid 归一；签名不变，Dealer 原样用）。env: `EMBED_MODEL`/`RERANK_MODEL`。
+- **临时"当前PDF"库（内存，会话结束即消）**：新写 [inmem_conn.py](src/deepdoc_engine/rag/utils/inmem_conn.py) `InMemoryConnection(DocStoreConnection)`，用 numpy 复现 ES 的混合检索（过滤→BM25 over content_ltks→cosine→加权融合 0.05/0.95→topN），让 `Dealer` 原样跑、**打分不依赖 ES**。
+- **持久语料库（ES，区分 successful/unsuccessful）**：复用 [es_conn.py](src/deepdoc_engine/rag/utils/es_conn.py)（改：dotenv 可选、auth 走 env、`request_timeout`）；vendor `conf/mapping.json` 并加 `*_384_vec` 模板；每个 chunk 带 `doc_id=application_id` + `success_label`。
+- **建库/检索胶水**：[src/retrieval/indexer.py](src/retrieval/indexer.py)（`build_index_from_pool` 内存 / `build_corpus_es` 一次性建 ES 语料，含 CLI `python -m src.retrieval.indexer --recreate`）+ [src/retrieval/retriever.py](src/retrieval/retriever.py)（`evidence_for_section` 查当前PDF / `fewshot_for_section` 查 ES、**排除当前申请**、优先 successful、`section_query` 限 50 词）。
+- **接入 pipeline**：[pipeline.py](src/scoring/pipeline.py) Stage2 把 `_build_full_application_text` 换成 `_retrieval_scope`（检索证据，失败/空→回退全文）；`build_final_scoring_messages` 加 `calibration_examples`（few-shot，仅校准 0-5 标尺、禁止当证据/抄袭）。新参数 `use_retrieval`/`evidence_top_k`/`corpus_index`/`fewshot_n`；[qwen3_ollama.py](qwen3_ollama.py) 经 env `GRANT_USE_RETRIEVAL`/`GRANT_CORPUS_INDEX` 暴露。`debug.retrieval_used`/`fewshot_used` 记录。
+- **其他改动**：rag_tokenizer 加 `strQ2B`/`tradi2simp`（CJK no-op）；synonym WordNet 扩展默认关（`RAG_SYNONYM_WORDNET=1` 开，否则 ES 子句爆 maxClauseCount=1310）；search_v2 stray print → logging、success_label/parser_section 进 src+chunk dict。
+- **新依赖**：sentence-transformers(已装)、elasticsearch/elasticsearch-dsl(`<9`)。NLTK 加 wordnet/omw-1.4。
+- **验证（live ES 8.11 via Docker）**：corpus 建成 22 篇(11 succ/11 unsucc, 2220 chunks)；few-shot 正确排除当前申请、优先 successful、训练查询命中训练段(sim 0.74-0.76)；端到端 `retrieval_used=True`/`fewshot_used=True`，6/6 stage2 prompt 注入了 calibration_examples；测试 18 passed/1 pre-existing fail；ES 关闭时优雅降级（few-shot 跳过、打分照常）。
+- **ES 容器**：`docker run -d --name grant-es -p 9200:9200 -e discovery.type=single-node -e xpack.security.enabled=false elasticsearch:8.11.3`；停 `docker stop grant-es`、起 `docker start grant-es`。建库：`ES_HOST=http://localhost:9200 python -m src.retrieval.indexer --recreate`。
+
+### (原计划) 步骤2：embedding 落地
 照搬 [file_parse.py `execute_insert_process`](../LLM_agent_course/S2_llm/swxy/backend/app/service/core/file_parse.py) 流水线：parse→build_pool→对每 chunk `generate_embedding`(本地ST)→先存内存。
 
 ### 步骤3：检索替换（核心）

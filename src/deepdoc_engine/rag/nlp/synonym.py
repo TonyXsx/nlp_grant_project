@@ -68,6 +68,12 @@ class Dealer:
 
     def lookup(self, tk):
         if re.match(r"[a-z]+$", tk):
+            # WordNet synonym expansion is OFF by default: for English grant text
+            # it is noisy (e.g. "scores" -> "seduce","sexual") and multiplies the
+            # ES query_string clause count past ES's maxClauseCount. Re-enable
+            # with RAG_SYNONYM_WORDNET=1.
+            if os.getenv("RAG_SYNONYM_WORDNET", "0") != "1":
+                return []
             res = list(set([re.sub("_", " ", syn.name().split(".")[0]) for syn in wordnet.synsets(tk)]) - set([tk]))
             return [t for t in res if t]
 

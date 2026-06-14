@@ -27,11 +27,16 @@ from deepdoc_engine.rag.utils import singleton
 from deepdoc_engine.api.utils.file_utils import get_project_base_directory
 from deepdoc_engine.rag.utils.doc_store_conn import MatchExpr, OrderByExpr, MatchTextExpr, MatchDenseExpr, FusionExpr
 from deepdoc_engine.rag.nlp import is_english
-from dotenv import load_dotenv
 
-load_dotenv()
+try:  # python-dotenv is optional
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 ES_HOST = os.getenv("ES_HOST", "http://localhost:9200")
+ES_USER = os.getenv("ES_USER", "elastic")
+ES_PASSWORD = os.getenv("ES_PASSWORD", "infini_rag_flow")
 ATTEMPT_TIME = 2
 PAGERANK_FLD = "pagerank_fea"
 TAG_FLD = "tag_feas"
@@ -46,9 +51,9 @@ class ESConnection():
         logger.info(f"Connecting to Elasticsearch at {ES_HOST}")
         self.es = Elasticsearch(
             [ES_HOST],  # Elasticsearch URL
-            basic_auth=("elastic", "infini_rag_flow"),  # 用户名和密码
-            verify_certs=False,  # 禁用 SSL 证书验证
-            timeout=600
+            basic_auth=(ES_USER, ES_PASSWORD),  # env-driven (defaults: elastic/infini_rag_flow)
+            verify_certs=False,  # disable SSL cert verification
+            request_timeout=600,  # ES 8.x client param (was `timeout`)
         )
         logger.info("Elasticsearch connection established")
 

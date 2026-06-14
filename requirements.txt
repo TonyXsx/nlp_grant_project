@@ -28,3 +28,8 @@ tiktoken>=0.6
 huggingface_hub>=0.23
 chardet>=5.2
 six>=1.16
+
+# Hybrid retrieval: persistent ES corpus store (Phase B; in-memory current-PDF
+# store needs neither). ES 8.x to match the vendored es_conn.
+elasticsearch>=8,<9
+elasticsearch-dsl>=8,<9
