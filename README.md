@@ -1,6 +1,12 @@
 # NIHR Grant Application Automated Scoring System
 
-This project implements a structured scoring pipeline for NIHR grant applications using a local large language model backend through Ollama. The input is a grant application PDF. The output is a structured JSON file containing rubric-level scores, evidence sources, strengths, limitations, and an overall score.
+This project implements a structured scoring pipeline for NIHR grant applications, backed by a configurable large language model (a local model through Ollama, or the DeepSeek API). The input is a grant application document (PDF, DOCX, or PPT). The output is a structured JSON file containing rubric-level scores, evidence sources with page references, strengths, limitations, and an overall score.
+
+Beyond scoring, the system now includes:
+
+- A **vendored DeepDOC parsing engine** (layout recognition, OCR, table structure, block concatenation) as a robust fallback for documents the rule-based parsers cannot handle, and as the primary parser for DOCX/PPT.
+- A **hybrid retrieval layer** (BM25 + dense vectors + reranking) over two stores — an ephemeral in-memory index of the current application (drives evidence selection during scoring) and a persistent Elasticsearch corpus of labelled applications (supplies few-shot calibration examples).
+- A grounded **Question & Answer chat** on the result page, so a reviewer, applicant, or committee member can ask why a section scored as it did, what the application says, or how it compares to other funded applications — each answer cited back to the source chunks.
 
 ---
 
@@ -10,23 +16,26 @@ This project implements a structured scoring pipeline for NIHR grant application
 
 NIHR applications can contain tens of thousands of words, often exceeding or crowding the model context window. Even when the full text fits, the model may struggle to check each scoring signal against the right evidence because attention is spread across the entire document.
 
-This system addresses that problem by first splitting the application into a traceable chunk pool, then using a two-stage pipeline for evidence discovery and final scoring. The model only sees the context most relevant to the current scoring dimension.
+This system addresses that problem by first splitting the application into a traceable chunk pool, then using a two-stage pipeline for evidence discovery and final scoring. The model only sees the context most relevant to the current scoring dimension. For each rubric section, that context is selected by **hybrid retrieval** (lexical BM25 + dense vector similarity, fused and reranked) over an index of the current application's chunks, with a safe fallback to the full application text when retrieval is unavailable.
 
 ---
 
 ## Pipeline Architecture
 
 ```text
-PDF
+Document (PDF / DOCX / PPT)
  |
  v
 [1] Parser
+ |   Rule-based parsers (Fellowship / RfPB / generic PDF), then DeepDOC as the
+ |   final fallback. Accept the first result that passes a content-quality gate.
  |   Extract text by application section and generate structured JSON.
  |
  v
 [2] Chunk Pool Construction
- |   Split each section into text chunks (default: <= 1200 characters).
- |   Assign each chunk a unique chunk_id and preserve its source section.
+ |   Token-based chunking (default: ~256 tokens, sentence-respecting, heading-aware).
+ |   Tables are kept as their own chunks. Each chunk carries a unique chunk_id, its
+ |   source section, BM25 token fields, and DeepDOC page positions when available.
  |
  v
 [3] Stage 1 - Belief Accumulation
@@ -36,10 +45,11 @@ PDF
  |   Merge results into a global belief_state.
  |
  v
-[4] Dynamic Context Selection
- |   For each scoring dimension, combine rule-based section priors with
- |   evidence-derived sections from the belief_state.
- |   Deduplicate chunks and preserve original document order.
+[4] Hybrid Evidence Retrieval (per rubric dimension)
+ |   Index the current application's chunks in an ephemeral in-memory store.
+ |   Retrieve the most relevant chunks for each rubric section (BM25 + dense
+ |   vectors, fused and reranked). Fall back to full text if retrieval is empty.
+ |   Optionally pull few-shot calibration examples from the Elasticsearch corpus.
  |
  v
 [5] Stage 2 - Final Scoring
@@ -59,30 +69,47 @@ PDF
 
 ### Parser Layer
 
-Located in `src/all_type_parser/`. The parser automatically detects the PDF type and routes the file to the appropriate parser.
+Located in `src/all_type_parser/`. The parser automatically detects the document type and routes the file to the appropriate parser.
 
 | File | Target format | doc_type |
 |---|---|---|
 | `fellowships_parser.py` | NIHR Fellowship applications (doctoral/postdoctoral) | `fellowship` |
 | `RfPB_parser.py` | Research for Patient Benefit Stage 2 applications | `rfpb` |
-| `all_other_parser.py` | Fallback parser for other formats | `unknown` |
+| `pdf_parser.py` | Generic blue-box PDF parser | `unknown` |
+| `deepdoc_fallback.py` | DeepDOC engine wrapper for PDF / DOCX / PPT | `unknown` |
 
 The parser output is a structured JSON object. The top level includes a `doc_type` field, which is later used for scoring adaptation.
+
+**Routing and the content-quality gate.** For PDFs, the rule-based parsers are tried in order, and the first result that passes a **content-quality gate** is accepted — not merely the first non-empty one. The gate (`_parse_is_good`) requires a minimum amount of real content (default: ≥ 1000 content characters across ≥ 1 section), which prevents a parser that only recovered a title block from silently "succeeding" and starving the scorer of evidence. If no rule-based parser passes the gate, the **DeepDOC engine** is used as the final fallback; if nothing passes, the richest non-empty result seen is returned. DOCX and PPT files are parsed directly by the DeepDOC engine.
 
 Key layout differences between RfPB and Fellowship applications:
 
 - Fellowship applications usually have fixed blue boxes near the top of each page, making section boundaries relatively clear.
 - RfPB Stage 2 applications may place blue boxes at variable positions, and a single page can contain multiple sections, so line-level section detection is required.
 
+#### DeepDOC parsing engine (`src/deepdoc_engine/`)
+
+A self-contained, vendored copy of the DeepDOC document-understanding stack (adapted from a mature RAG codebase). It runs entirely offline from bundled ONNX/XGBoost model weights and provides:
+
+- **Layout recognition** — a vision model labels each page region (title, text, table, figure, …).
+- **OCR** — text detection + recognition for scanned or image-based pages.
+- **Table structure recognition** — reconstructs table cells and emits HTML tables, which become standalone chunks.
+- **Block concatenation** — an XGBoost model decides where consecutive blocks should be merged into continuous text, and records per-block page positions.
+
+The engine is wrapped by `deepdoc_fallback.py`, which emits the same structured-JSON contract as the rule-based parsers (so the chunk pool consumes it unchanged). Its English tokenisation is provided by an NLTK-based shim that mirrors the original interface.
+
 ---
 
 ### Chunk Pool (`src/pool/build_pool.py`)
 
-The chunk pool converts the parsed JSON into fixed-size evidence units. By default, each text chunk is limited to 1200 characters. Each chunk stores:
+The chunk pool converts the parsed JSON into traceable evidence units. Chunking is **token-based** (default ~256 tokens), sentence-respecting, and heading-aware: it does not cut sentences mid-way, and it keeps numbered/bulleted headings attached to the text they introduce. Tables are restored as their own chunks (HTML kept intact) so budget and structural analysis can read them. Each chunk stores:
 
 - `chunk_id`: unique ID, such as `secdrp__001_a`
 - `parser_section`: source section, such as `Detailed Research Plan`
 - `source_path`: original JSON path, such as `APPLICATION DETAILS > Detailed Research Plan`
+- `content_ltks` / `content_sm_ltks` / `title_tks`: tokenised fields used for BM25 lexical retrieval
+- `token_count`, `is_table`: chunk metadata
+- `position`: DeepDOC page positions (page-level, used to show page references in the UI) when the document was parsed by DeepDOC; empty for rule-based parses
 
 The pool also adds derived chunks:
 
@@ -120,23 +147,22 @@ The pool also adds derived chunks:
 
 ---
 
-### Dynamic Context Selection
+### Hybrid Evidence Retrieval
 
-Final scoring does not reuse the same full-document prompt for every rubric section. Instead, the system builds a scoped context dynamically for each scoring dimension.
+Final scoring does not reuse the same full-document prompt for every rubric section. Instead, the system retrieves a scoped context dynamically for each scoring dimension.
 
-The selection process combines two sources:
+**Two stores, one retriever.** The retrieval layer (`src/retrieval/`, `src/deepdoc_engine/rag/`) reuses a single hybrid retriever (`Dealer`) over two backends:
 
-1. **Rule-based section priors** from `SECTION_TO_PARSER_SECTIONS`, which define where evidence is expected to appear for each rubric dimension.
-2. **Evidence-driven expansion** from the Stage 1 `belief_state`, which adds parser sections that actually contain evidence for the target rubric sub-criteria.
+| Store | Backend | Lifetime | Role |
+|---|---|---|---|
+| Current-application index | In-memory (`InMemoryConnection`) | Ephemeral (per request) | Evidence selection during scoring + single-document QA |
+| Labelled corpus | Elasticsearch (`grant_corpus`) | Persistent | Few-shot calibration examples + cross-application QA |
 
-For example:
+Both run the same fusion pipeline: lexical **BM25** over the tokenised fields + **dense vector** cosine similarity (local `BAAI/bge-small-en-v1.5`, 384-dim), fused by a weighted sum, then reranked by a local cross-encoder. The in-memory store reproduces the Elasticsearch hybrid search in NumPy so the scoring path needs no external service.
 
-- `proposed_research` retrieves the application context, plain English summary, scientific abstract, detailed research plan, previous-stage changes, PPI/WPCC sections, and budget information.
-- `training_development` retrieves training, development, support, and mentorship sections.
-- `application_form` retrieves the derived Application Form Analysis chunk.
-- `general` uses the full application because applicant quality evidence can appear across many sections.
+**Per-dimension retrieval.** For each rubric section, a query is built from the section / sub-criterion / signal text, and the most relevant chunks of the current application are retrieved. Derived chunks are scoped to the dimension they were synthesised for (Application Context → `general`, Plain English NLP Analysis → `proposed_research`, Application Form Analysis → `application_form`). If retrieval returns nothing (or embeddings are unavailable), the system **falls back to the full application text**, preserving the original behaviour.
 
-After selection, duplicate chunks are removed and the remaining chunks are ordered according to their original document position. If no scoped context can be constructed, the system falls back to the full application text.
+**Few-shot calibration (optional).** When an Elasticsearch corpus index is configured, Stage 2 also pulls a small number of same-dimension example chunks from **successful** applications (always excluding the current application) and injects them as calibration anchors — they only illustrate what a strong answer looks like for the 0–5 scale; they are never used as evidence for the current application. The corpus is built once with `python -m src.retrieval.indexer --recreate`.
 
 ---
 
@@ -144,9 +170,8 @@ After selection, duplicate chunks are removed and the remaining chunks are order
 
 **Execution:**
 
-- For each major rubric section, identify relevant parser sections from the belief state and rule-based mappings.
-- Build a scoped version of the application text from the chunk pool.
-- Send the scoped application text, the target rubric section, and the final belief state to the model.
+- For each major rubric section, retrieve the most relevant chunks of the current application via hybrid retrieval (with full-text fallback).
+- Send the scoped application text, the target rubric section, the final belief state, and any few-shot calibration examples to the model.
 - The model scores every signal from 0 to 5 and returns:
   - `used_chunk_ids`
   - `pros`
@@ -154,6 +179,8 @@ After selection, duplicate chunks are removed and the remaining chunks are order
   - signal-level scores
 
 The model output is constrained by JSON schemas so that all required signals are scored and all score values are valid integers from 0 to 5.
+
+`run_info.retrieval_method` records whether hybrid retrieval or the full-text fallback was used, and `debug.retrieval_used` / `debug.fewshot_used` flag whether each was active for the run.
 
 ---
 
@@ -206,24 +233,72 @@ Excluded sub-criteria can still appear in the output with `excluded_reason: "not
 
 ---
 
+## Scoring Backends
+
+The scorer is decoupled from the LLM client behind a small interface (`generate_json(messages, schema, max_tokens)`), so the backend is selectable at runtime via the `SCORER_BACKEND` environment variable:
+
+| `SCORER_BACKEND` | Backend | Configuration |
+|---|---|---|
+| `ollama` (default) | Local model through Ollama | `OLLAMA_HOST`, `OLLAMA_MODEL` |
+| `deepseek` | DeepSeek (OpenAI-compatible API) | `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL` |
+
+Configuration is read from a project-local `.env` file (loaded automatically when `python-dotenv` is installed). `.env` is gitignored — never commit API keys. The local Ollama path keeps the system fully offline; the DeepSeek path is convenient for fast iteration and for hosts without a GPU.
+
+> Evaluation note: numbers reported for the deployed system should be produced on the model it actually runs (local Qwen3). Cloud-API runs are useful for development but their scores/variance do not transfer verbatim to the local model.
+
+---
+
+## Question Answering (QA) Chat
+
+The result page includes a grounded chat assistant (`src/qa/qa_service.py`, exposed via the web server's `/ask` endpoint). It reuses the same hybrid retriever and stores as the scorer, so answers are cited back to source chunks (with section and page references).
+
+**Intent routing (one LLM call).** Each question is routed into a mode, with a standalone retrieval query rewritten from the conversation, and — for scoring questions — the rubric section(s) the question targets:
+
+| Mode | Trigger | Context fed to the model | Retrieval |
+|---|---|---|---|
+| `single_doc` | About the application's content | Top chunks of the current application | In-memory store |
+| `scoring` | About the assessment (why a score, strengths/weaknesses, evidence) | The scored result, scoped to the targeted section(s) | None (uses stored assessment) |
+| `corpus` | Comparison across other applications | Chunks from other **successful** applications | Elasticsearch corpus |
+
+**Section-scoped scoring answers.** For scoring questions, the router names the section(s) involved (one, several, or none for whole-assessment questions). Only those sections of the assessment are serialised into the prompt, so a question about, say, *Sites and Support* sees that section's scores, strengths, weaknesses, and evidence — instead of a truncated dump of the whole assessment. Citations are deduplicated (the same chunk reuses one `[n]`) and capped.
+
+**Role gating.** Cross-application (`corpus`) questions require a committee/admin role; the corpus retrieval always excludes the current application. The corpus modes require a configured Elasticsearch index (see below); the `single_doc` and `scoring` modes work without it.
+
+**UI.** The chat panel is draggable and resizable. Citations and evidence chunks show a sentence-boundary preview and expand to the full chunk on click.
+
+---
+
 ## Directory Structure
 
 ```text
 .
 |-- criteria_points.json          # Rubric definition
-|-- qwen3_ollama.py               # Main Ollama scoring entry point
+|-- qwen3_ollama.py               # Main scoring entry point (Ollama / DeepSeek)
 |-- score_experiments.ipynb       # Score stability experiments
+|-- start.sh                      # One-shot web server launcher (venv + deps + run)
+|-- .env                          # Backend / API config (gitignored)
 |-- src/
 |   |-- all_type_parser/
-|   |   |-- all_type_parser.py    # Parser router
+|   |   |-- all_type_parser.py    # Parser router (+ content-quality gate)
 |   |   |-- fellowships_parser.py # Fellowship PDF parser
 |   |   |-- RfPB_parser.py        # RfPB Stage 2 PDF parser
 |   |   |-- pdf_parser.py         # Generic PDF parser
 |   |   |-- pdf_utils.py          # PDF utility functions
+|   |   |-- deepdoc_fallback.py   # DeepDOC engine wrapper (PDF/DOCX/PPT)
+|   |-- deepdoc_engine/           # Vendored DeepDOC stack (parsers, vision, rag/nlp)
 |   |-- pool/
-|   |   |-- build_pool.py         # Chunk pool construction
+|   |   |-- build_pool.py         # Token-based chunk pool construction
+|   |-- retrieval/
+|   |   |-- indexer.py            # Build in-memory / ES indexes from the chunk pool
+|   |   |-- retriever.py          # Per-section evidence + few-shot retrieval
 |   |-- scoring/
-|       |-- pipeline.py           # Two-stage scoring pipeline
+|   |   |-- pipeline.py           # Two-stage scoring pipeline
+|   |   |-- api_scorer.py         # DeepSeek (OpenAI-compatible) scorer
+|   |-- qa/
+|       |-- qa_service.py         # Grounded QA: intent router + 3 answer modes
+|-- web/
+|   |-- server.py                 # Flask server (upload, scoring, /ask, results)
+|   |-- public/                   # UI (upload + result pages, QA chat widget)
 |-- data/
 |   |-- successful/               # Example successful application PDFs
 |   |-- unsuccessful/             # Example unsuccessful application PDFs
@@ -327,6 +402,55 @@ Use `score_experiments.ipynb` for scoring experiments, including:
 - repeated scoring of the same PDF to inspect variance
 - A/B group comparisons between application sets
 - score distribution and hypothesis-test exploration
+
+---
+
+### C. Optional — DeepSeek backend and the Elasticsearch corpus
+
+**Use the DeepSeek API instead of local Ollama.** Create a `.env` in the project root (it is gitignored):
+
+```bash
+SCORER_BACKEND=deepseek
+DEEPSEEK_API_KEY=sk-...
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+With this set, both scoring and the QA chat use DeepSeek; no Ollama is required. Remove the file (or set `SCORER_BACKEND=ollama`) to go back to the local model.
+
+**Enable the labelled corpus** (powers few-shot calibration during scoring and committee/cross-application QA). Start an Elasticsearch instance and build the index once:
+
+```bash
+# 1. Elasticsearch 8.x (single node, security off for local use)
+docker run -d --name grant-es -p 9200:9200 \
+  -e discovery.type=single-node -e xpack.security.enabled=false \
+  elasticsearch:8.11.3
+
+# 2. Build the corpus from the labelled example sets
+ES_HOST=http://localhost:9200 python -m src.retrieval.indexer --recreate
+```
+
+Then point the app at it (in `.env` or the environment):
+
+```bash
+GRANT_CORPUS_INDEX=grant_corpus
+ES_HOST=http://localhost:9200
+```
+
+The corpus is entirely optional: with it absent, scoring still runs (without few-shot) and the QA chat still answers `single_doc` and `scoring` questions; only `corpus` (committee) questions are disabled.
+
+**Relevant environment variables**
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SCORER_BACKEND` | `ollama` | Scoring/QA backend: `ollama` or `deepseek` |
+| `GRANT_USE_RETRIEVAL` | `1` | Set `0` to disable hybrid retrieval (full-text scoring) |
+| `GRANT_CORPUS_INDEX` | _(unset)_ | Elasticsearch index name to enable the corpus features |
+| `ES_HOST` | `http://localhost:9200` | Elasticsearch endpoint |
+| `EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | Local sentence-transformers embedding model |
+| `RERANK_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Local cross-encoder reranker |
+
+> On Windows, run the server/CLI with `PYTHONUTF8=1` so console glyphs in log output do not raise `UnicodeEncodeError`.
 
 ---
 
@@ -541,7 +665,8 @@ The top-level scored JSON has the following shape:
 {
   "doc_id": "IC00029_RfPB",
   "run_info": {
-    "scorer_model": "qwen3.5:35b",
+    "scorer_model": "qwen3.5:27b",
+    "retrieval_method": "belief_then_inmem_hybrid_retrieval_scoring",
     "ran_at_utc": "..."
   },
   "pool_lookup": {
@@ -577,7 +702,9 @@ The top-level scored JSON has the following shape:
           "evidence": [
             {
               "id": "secac__001_a",
-              "text": "..."
+              "text": "...",
+              "section": "Applicant CV",
+              "pages": [3]
             }
           ]
         }
@@ -591,7 +718,9 @@ The top-level scored JSON has the following shape:
   "debug": {
     "doc_type": "rfpb",
     "excluded_sections": ["training_development"],
-    "excluded_sub_ids": ["g.1", "g.2"]
+    "excluded_sub_ids": ["g.1", "g.2"],
+    "retrieval_used": true,
+    "fewshot_used": false
   }
 }
 ```
