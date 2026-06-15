@@ -2026,15 +2026,30 @@
       const chunkList = document.getElementById('evidenceChunkList');
       if (chunkList) {
         if (evidenceTexts.length > 0) {
-          chunkList.innerHTML = evidenceTexts.map(({ text, source }) => {
+          chunkList.innerHTML = evidenceTexts.map(({ text, source }, i) => {
             const words = (text || '').trim().split(/\s+/);
-            const truncated = words.slice(0, 30).join(' ') + (words.length > 30 ? '…' : '');
-            return `<div class="evidence-chunk">
-              <p>"${escapeHtml(truncated)}"</p>
+            const isLong = words.length > 30;
+            const truncated = words.slice(0, 30).join(' ') + (isLong ? ' …' : '');
+            return `<div class="evidence-chunk" data-i="${i}">
+              <p class="ev-text">"${escapeHtml(truncated)}"</p>
+              ${isLong ? `<a class="ev-more">show full chunk</a>` : ''}
               ${source ? `<p class="ev-source">${escapeHtml(source)}</p>` : ''}
               <p class="ev-source" style="color:var(--brand);font-weight:600;">Sub-criterion: ${escapeHtml(criterionPair.name)}</p>
             </div>`;
           }).join('');
+          chunkList.querySelectorAll('.ev-more').forEach(a => {
+            a.addEventListener('click', () => {
+              const wrap = a.closest('.evidence-chunk');
+              const item = evidenceTexts[+wrap.dataset.i];
+              const p = wrap.querySelector('.ev-text');
+              const expanded = wrap.dataset.exp === '1';
+              const words = (item.text || '').trim().split(/\s+/);
+              const truncated = words.slice(0, 30).join(' ') + ' …';
+              p.textContent = '"' + (expanded ? truncated : (item.text || '')) + '"';
+              a.textContent = expanded ? 'show full chunk' : 'show less';
+              wrap.dataset.exp = expanded ? '0' : '1';
+            });
+          });
         } else {
           chunkList.innerHTML = `<p class="small-copy" style="color:var(--text-3);margin:0;">No evidence chunks stored for this criterion.</p>`;
         }
@@ -2682,10 +2697,11 @@
       background: var(--brand, #1d4ed8); color: #fff; border: none; border-radius: 999px;
       padding: 12px 18px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(29,78,216,.4); }
     #qaPanel { position: fixed; right: 24px; bottom: 80px; z-index: 1000; width: 400px; max-width: 92vw;
-      height: 560px; max-height: 78vh; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.22); display: none; flex-direction: column; overflow: hidden; }
+      height: 560px; max-height: 90vh; min-width: 300px; min-height: 280px; background: #fff;
+      border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.22);
+      display: none; flex-direction: column; overflow: hidden; resize: both; }
     #qaPanel.open { display: flex; }
-    .qa-head { padding: 12px 14px; border-bottom: 1px solid #eef1f5; display: flex; align-items: center; gap: 8px; }
+    .qa-head { padding: 12px 14px; border-bottom: 1px solid #eef1f5; display: flex; align-items: center; gap: 8px; cursor: move; user-select: none; }
     .qa-head h4 { margin: 0; font-size: 14px; flex: 1; }
     .qa-head select { font-size: 12px; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 8px; }
     .qa-close { border: none; background: none; font-size: 20px; cursor: pointer; color: #6b7280; }
@@ -2699,6 +2715,9 @@
     .qa-cite { font-size: 11px; color: #374151; margin-top: 4px; }
     .qa-cite b { color: var(--brand, #1d4ed8); }
     .qa-cite .src { color: #6b7280; }
+    .qa-cite-more, .ev-more { color: var(--brand, #1d4ed8); font-size: 11px; font-weight: 600;
+      cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .qa-cite-more:hover, .ev-more:hover { text-decoration: underline; }
     .qa-foot { padding: 10px; border-top: 1px solid #eef1f5; display: flex; gap: 8px; }
     .qa-foot input { flex: 1; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; }
     .qa-foot button { background: var(--brand, #1d4ed8); color: #fff; border: none; border-radius: 10px; padding: 0 14px; font-weight: 700; cursor: pointer; }
@@ -2729,7 +2748,36 @@
       const input = document.getElementById('qaInput');
       const send = document.getElementById('qaSend');
       const roleSel = document.getElementById('qaRole');
+      const head = panel.querySelector('.qa-head');
       const history = [];
+
+      // ── drag (header) + resize (native :resize handle). On first interaction
+      //    switch from right/bottom anchoring to left/top so coords stay sane.
+      function pinPosition() {
+        if (panel.dataset.pinned) return;
+        const r = panel.getBoundingClientRect();
+        panel.style.left = r.left + 'px';
+        panel.style.top = r.top + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.dataset.pinned = '1';
+      }
+      let drag = null;
+      head.addEventListener('mousedown', (e) => {
+        if (e.target.closest('select, button')) return;  // don't drag from controls
+        pinPosition();
+        const r = panel.getBoundingClientRect();
+        drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!drag) return;
+        const left = Math.max(4, Math.min(e.clientX - drag.dx, window.innerWidth - 60));
+        const top = Math.max(4, Math.min(e.clientY - drag.dy, window.innerHeight - 40));
+        panel.style.left = left + 'px';
+        panel.style.top = top + 'px';
+      });
+      window.addEventListener('mouseup', () => { drag = null; });
 
       function getJobId() {
         try {
@@ -2759,14 +2807,32 @@
         const cites = out.citations || [];
         if (cites.length) {
           html += '<div class="qa-cites"><b style="font-size:11px;">Sources</b>';
-          cites.forEach(c => {
+          cites.forEach((c, i) => {
             const pages = (c.pages && c.pages.length) ? ' · p.' + c.pages.join(', ') : '';
             const appn = c.application ? ` · ${esc(c.application)}` : '';
-            html += `<div class="qa-cite"><b>[${c.n}]</b> <span class="src">${esc(c.section || '')}${pages}${appn}</span><br>${esc((c.text || '').slice(0, 220))}</div>`;
+            const preview = c.preview != null ? c.preview : (c.text || '');
+            const hasMore = (c.text || '').length > preview.length;
+            html += `<div class="qa-cite" data-i="${i}"><b>[${c.n}]</b> <span class="src">${esc(c.section || '')}${pages}${appn}</span>`
+                  + `<br><span class="qa-cite-text">${esc(preview)}</span>`
+                  + (hasMore ? ` <a class="qa-cite-more">show full chunk</a>` : '')
+                  + `</div>`;
           });
           html += '</div>';
         }
         d.innerHTML = html;
+        // click-to-expand: swap preview ↔ full chunk text
+        d.querySelectorAll('.qa-cite-more').forEach(a => {
+          a.addEventListener('click', () => {
+            const wrap = a.closest('.qa-cite');
+            const c = cites[+wrap.dataset.i];
+            const span = wrap.querySelector('.qa-cite-text');
+            const expanded = wrap.dataset.exp === '1';
+            span.textContent = expanded ? (c.preview != null ? c.preview : (c.text || '')) : (c.text || '');
+            a.textContent = expanded ? 'show full chunk' : 'show less';
+            wrap.dataset.exp = expanded ? '0' : '1';
+            msgs.scrollTop = msgs.scrollHeight;
+          });
+        });
         msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
       }
 
@@ -2805,6 +2871,7 @@
       fab.addEventListener('click', () => {
         panel.classList.toggle('open');
         if (panel.classList.contains('open')) {
+          pinPosition();  // so drag/resize use a stable top/left origin
           if (!msgs.children.length) {
             addNote('Ask about this application\'s content, why it scored as it did, or (as Committee) how it compares to other applications.');
           }

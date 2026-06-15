@@ -167,8 +167,26 @@ def _pages_of(chunk: dict, pool_lookup: dict | None = None) -> list[int]:
     return sorted({int(p[0]) for p in pos if p}) if pos else []
 
 
+def _smart_preview(text: str, limit: int = 400) -> str:
+    """Collapsed citation preview: never break a word. Prefer cutting at the last
+    sentence end within the window, else at the last word boundary; append ' …'
+    when content was cut. The full text is sent separately for click-to-expand."""
+    s = (text or "").strip()
+    if len(s) <= limit:
+        return s
+    window = s[:limit]
+    ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", window)]
+    if ends and ends[-1] >= limit * 0.5:
+        return window[:ends[-1]].rstrip() + " …"
+    sp = window.rfind(" ")
+    return (window[:sp] if sp > 0 else window).rstrip() + " …"
+
+
 def _references_block(chunks: list[dict], pool_lookup: dict | None = None) -> tuple[str, list[dict]]:
-    """Numbered reference text for the prompt + citation list for the UI."""
+    """Numbered reference text for the prompt + citation list for the UI.
+
+    Each citation carries a smart `preview` (sentence/word-boundary truncated) plus
+    the FULL `text`, so the UI can show a preview and expand to the whole chunk."""
     lines, cites = [], []
     for i, c in enumerate(chunks, 1):
         text = (c.get("content_with_weight") or c.get("text") or "").strip()
@@ -176,7 +194,8 @@ def _references_block(chunks: list[dict], pool_lookup: dict | None = None) -> tu
         pages = _pages_of(c, pool_lookup)
         meta = f"Section: {section}" + (f", p.{', '.join(map(str, pages))}" if pages else "")
         lines.append(f"[{i}] ({meta})\n{text}")
-        cites.append({"n": i, "text": text[:400], "section": section, "pages": pages})
+        cites.append({"n": i, "preview": _smart_preview(text), "text": text,
+                      "section": section, "pages": pages})
     return "\n\n".join(lines), cites
 
 
@@ -221,9 +240,10 @@ def _format_assessment(result: dict, max_chars: int = 9000) -> tuple[str, list[d
             for ev in (sub.get("evidence") or [])[:2]:
                 n += 1
                 pages = ev.get("pages") or []
+                full = (ev.get("text") or "")
                 meta = (ev.get("section") or "") + (f", p.{', '.join(map(str, pages))}" if pages else "")
-                lines.append(f"    [{n}] evidence ({meta}): {(ev.get('text') or '')[:200]}")
-                cites.append({"n": n, "text": (ev.get("text") or "")[:400],
+                lines.append(f"    [{n}] evidence ({meta}): {full[:200]}")
+                cites.append({"n": n, "preview": _smart_preview(full), "text": full,
                               "section": ev.get("section") or "", "pages": pages})
     text = "\n".join(lines)
     return text[:max_chars], cites
