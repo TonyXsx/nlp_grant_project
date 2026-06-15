@@ -1,0 +1,345 @@
+{
+  "processed_sections": [
+    "Applicant CV",
+    "Applicant Research Background",
+    "Plain English Summary of Research",
+    "Scientific Abstract",
+    "Detailed Research Plan",
+    "Patient & Public Involvement",
+    "Training & Development and Research Support",
+    "SUMMARY BUDGET",
+    "Application Context",
+    "Plain English NLP Analysis",
+    "Application Form Analysis"
+  ],
+  "subcriteria_beliefs": {
+    "g.3": {
+      "good_evidence_ids": [
+        "secac__001_a",
+        "secac__001_b",
+        "secarb__001_a",
+        "secarb__001_c",
+        "secarb__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: lists MSc and BSc degrees and multiple research assistant/manager positions, providing evidence of relevant research experience.",
+        "Applicant Research Background: provides extensive evidence of relevant research experience including systematic reviews, clinical trials, and meta-analyses."
+      ]
+    },
+    "g.4": {
+      "good_evidence_ids": [
+        "secac__001_c",
+        "secac__001_d",
+        "secac__001_e",
+        "secarb__001_e",
+        "secarb__001_b",
+        "secarb__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: includes multiple publications including a Cochrane review and several PROSPERO protocols, indicating impactful research outputs.",
+        "Applicant Research Background: reports impactful outputs including a first-author Cochrane review and multiple manuscripts."
+      ]
+    },
+    "g.5": {
+      "good_evidence_ids": [
+        "secac__001_a",
+        "secac__001_c",
+        "secarb__001_d",
+        "secarb__001_e"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant CV: shows a trajectory from undergraduate research assistant to assistant trial manager, and first-author publications, suggesting increasing responsibility.",
+        "Applicant Research Background: shows increasing responsibility including leading events and supervising students."
+      ]
+    },
+    "g.1": {
+      "good_evidence_ids": [
+        "secarb__001_a",
+        "secarb__001_e",
+        "secarb__001_f",
+        "sectdars__001_a",
+        "sectdars__001_d"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: demonstrates clear research vision, career trajectory, and a well-justified training plan.",
+        "Training & Development and Research Support: Training plan and career development activities show a clear vision and trajectory towards becoming a leader in evidence synthesis and women's health."
+      ]
+    },
+    "g.2": {
+      "good_evidence_ids": [
+        "secarb__001_f",
+        "secarb__001_e"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: explains why this award is the right next step, building on recent experience and reviewer feedback."
+      ]
+    },
+    "pr.8": {
+      "good_evidence_ids": [
+        "secarb__001_e",
+        "secarb__001_b"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Applicant Research Background: demonstrates quality of previous research through publications and ongoing manuscripts."
+      ]
+    },
+    "pr.1": {
+      "good_evidence_ids": [
+        "secpesor__001_a",
+        "secpesor__001_b",
+        "secpesor__001_f",
+        "secpena__001"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Plain English Summary includes clear problem, aims, methods, PPI, and dissemination; uses plain language and emphasizes patient relevance.",
+        "Plain English NLP Analysis: provides readability metrics (Flesch-Kincaid, sentence structure), low jargon density, and coverage of problem/objectives/methods/beneficiaries/impact, supporting pr.1."
+      ]
+    },
+    "pr.5": {
+      "good_evidence_ids": [
+        "secpesor__001_b",
+        "secpesor__001_f",
+        "secpesor__001_g",
+        "secsa__001_d",
+        "secsa__001_e",
+        "secdrp__001_c",
+        "secdrp__001_d",
+        "secdrp__001_"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Section describes potential for better treatment information and improved measurement, with dissemination plans to benefit patients and public.",
+        "Scientific Abstract: states anticipated impact on women's lives and health systems, emphasizing patient/public benefit.",
+        "Detailed Research Plan: Detailed Research Plan emphasizes patient and public benefits: improving QoL, reducing economic burden, and informing clinical guidelines."
+      ]
+    },
+    "pr.6": {
+      "good_evidence_ids": [
+        "secpesor__001_f",
+        "secpesor__001_g",
+        "secdrp__001_t",
+        "secdrp__001_z",
+        "secdrp__001_|",
+        "secppi__001_a",
+        "secppi__001_c",
+        "secppi__001_h"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Section details PPI consultations with diverse women and a planned PPI committee to guide research at multiple stages.",
+        "Detailed Research Plan: Detailed Research Plan details extensive engagement with women and trialists through PPI committee, interviews, and focus groups across all work packages.",
+        "Patient & Public Involvement: Section details prior and planned PPI involvement at multiple stages, including co-design and feedback mechanisms."
+      ]
+    },
+    "pr.9": {
+      "good_evidence_ids": [
+        "secpesor__001_f",
+        "secdrp__001_z",
+        "secdrp__001_{",
+        "secdrp__001_}"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Section explicitly plans to include women of different ages, races, and cultural backgrounds, and sets up a diverse PPI committee.",
+        "Detailed Research Plan: Detailed Research Plan includes targeted strategies to recruit diverse women by age, ethnicity, and region, with use of translators to reduce barriers."
+      ]
+    },
+    "wp.1": {
+      "good_evidence_ids": [
+        "secpesor__001_f",
+        "secdrp__001_a",
+        "secdrp__001_t",
+        "secdrp__001_}",
+        "secppi__001_a",
+        "secppi__001_b",
+        "secppi__001_c"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Section describes prior consultations with women and plans for a PPI advisory committee to guide the research.",
+        "Detailed Research Plan: Detailed Research Plan integrates lived experience through a PPI committee that advises on all work packages, reflecting co-design.",
+        "Patient & Public Involvement: Demonstrates integration of lived experience through consultations and planned PPI committee guiding research design."
+      ]
+    },
+    "wp.3": {
+      "good_evidence_ids": [
+        "secpesor__001_f",
+        "secpesor__001_g",
+        "secdrp__001_~",
+        "secdrp__001_",
+        "secdrp__001_",
+        "secppi__001_f",
+        "secppi__001_h"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Plain English Summary of Research: Section outlines dissemination via conferences, papers, social media, blogs, and podcasts to maximize public and patient benefit.",
+        "Detailed Research Plan: Detailed Research Plan outlines dissemination via publications, conferences, webinars, and social media to maximize benefit to patients and public.",
+        "Patient & Public Involvement: Plans for dissemination to maximize patient/public benefit via co-created outputs and translation."
+      ]
+    },
+    "pr.2": {
+      "good_evidence_ids": [
+        "secsa__001_a",
+        "secdrp__001_e",
+        "secdrp__001_h",
+        "secdrp__001_i"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: identifies gaps in measurement approaches and evidence synthesis, demonstrating critical review.",
+        "Detailed Research Plan: Detailed Research Plan includes a comprehensive review of existing evidence, identifies knowledge gaps, and critically appraises limitations in HMB research."
+      ]
+    },
+    "pr.3": {
+      "good_evidence_ids": [
+        "secsa__001_d",
+        "secdrp__001_",
+        "secdrp__001_",
+        "secdrp__001_"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: provides a 30-month timeline with three work packages, indicating feasible scope.",
+        "Detailed Research Plan: Detailed Research Plan presents three well-defined work packages with clear timelines and success criteria, demonstrating feasibility."
+      ]
+    },
+    "pr.4": {
+      "good_evidence_ids": [
+        "secsa__001_d",
+        "secdrp__001_s",
+        "secdrp__001_v",
+        "secdrp__001_z"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Scientific Abstract: describes methods for systematic review, meta-analysis, and qualitative work, showing methodological rigor.",
+        "Detailed Research Plan: Detailed Research Plan describes rigorous methods including systematic review, COSMIN appraisal, multivariate meta-analysis, and qualitative thematic analysis."
+      ]
+    },
+    "wp.4": {
+      "good_evidence_ids": [
+        "secdrp__001_e",
+        "secdrp__001_z",
+        "secdrp__001_{",
+        "secppi__001_b",
+        "secppi__001_c"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Detailed Research Plan: Detailed Research Plan explicitly addresses representation of seldom heard groups, including Black women and those from diverse backgrounds, with purposive sampling.",
+        "Patient & Public Involvement: Explicitly addresses diversity and representation of seldom heard groups in PPI committee and interviews."
+      ]
+    },
+    "wp.5": {
+      "good_evidence_ids": [
+        "secppi__001_e",
+        "secppi__001_f",
+        "secppi__001_h"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Patient & Public Involvement: Involvement across multiple stages: design, recruitment, data collection, dissemination, and evaluation."
+      ]
+    },
+    "td.1": {
+      "good_evidence_ids": [
+        "sectdars__001_a",
+        "sectdars__001_b",
+        "sectdars__001_c"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Provides a comprehensive, structured training programme with specific courses mapped to work packages and a skills evaluation tool."
+      ]
+    },
+    "td.2": {
+      "good_evidence_ids": [
+        "sectdars__001_a",
+        "sectdars__001_b",
+        "sectdars__001_c"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Training is tailored to personal skill gaps identified via Skills Evaluation Tool and directly linked to project tasks per work package."
+      ]
+    },
+    "td.3": {
+      "good_evidence_ids": [
+        "sectdars__001_a",
+        "sectdars__001_d",
+        "sectdars__001_e"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Training plan supports career aspiration to become a leader in evidence synthesis and women's health through conferences, networks, and placements."
+      ]
+    },
+    "ss.2": {
+      "good_evidence_ids": [
+        "sectdars__001_f",
+        "sectdars__001_g",
+        "sectdars__001_h"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Supervisors' roles, meeting frequency, and expertise are clearly described, demonstrating strong mentorship arrangements."
+      ]
+    },
+    "ss.3": {
+      "good_evidence_ids": [
+        "sectdars__001_o",
+        "sectdars__001_p",
+        "sectdars__001_q"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: Host organisation provides tailored support through ICTM, Meta-Analysis Programme, doctoral training programme, and networking opportunities."
+      ]
+    },
+    "ss.4": {
+      "good_evidence_ids": [
+        "sectdars__001_s",
+        "sectdars__001_t"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "Training & Development and Research Support: UCL and ICTM hold Athena Swan awards, have Race Equality Charter, and mandate EDI training, demonstrating commitment to inclusive research culture."
+      ]
+    },
+    "pr.7": {
+      "good_evidence_ids": [
+        "secsb__001_a",
+        "secsb__001_b",
+        "secsb__001_j"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "SUMMARY BUDGET: provides detailed cost justifications for all budget items, strongly supporting pr.7."
+      ]
+    },
+    "wp.6": {
+      "good_evidence_ids": [
+        "secsb__001_j",
+        "secsb__001_k",
+        "secsb__001_l"
+      ],
+      "bad_evidence_ids": [],
+      "implications": [
+        "SUMMARY BUDGET: includes costed PPI activities (reimbursements, travel, training), supporting wp.6."
+      ]
+    }
+  },
+  "missing_signals": [
+    "g.6",
+    "ss.1",
+    "wp.2"
+  ]
+}

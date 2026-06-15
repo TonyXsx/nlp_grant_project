@@ -46,6 +46,17 @@ _STORE_CACHE: dict[str, tuple] = {}
 
 CORPUS_ROLES = {"committee", "admin"}  # who may ask cross-application questions
 
+# section_key → human name (mirrors pipeline.SECTION_KEY_MAP); used so scoring-QA
+# can route a question to the section(s) it is actually about.
+_SECTION_NAMES = {
+    "general": "General",
+    "proposed_research": "Proposed Research",
+    "training_development": "Training and Development",
+    "sites_support": "Sites and Support",
+    "wpcc": "Working with People and Communities",
+    "application_form": "Application Form",
+}
+
 
 # ── LLM backend (mirrors qwen3_ollama: SCORER_BACKEND = ollama | deepseek) ────
 def _chat(messages: list[dict], *, json_mode: bool = False, max_tokens: int = 1500) -> str:
@@ -90,16 +101,29 @@ def _extract_json(text: str) -> dict:
 
 
 # ── 1. intent router (+ query rewrite) ────────────────────────────────────────
-def route(question: str, history: list[dict] | None = None, allow_corpus: bool = True) -> dict:
-    """Classify the question and rewrite it into a standalone retrieval query.
+def route(question: str, history: list[dict] | None = None, allow_corpus: bool = True,
+          section_catalog: list[tuple[str, str]] | None = None) -> dict:
+    """Classify the question, rewrite it into a standalone retrieval query, and —
+    for scoring questions — name the section(s) it targets.
 
-    Returns {"mode": single_doc|scoring|corpus, "search_query": str}.
+    Returns {"mode": single_doc|scoring|corpus, "search_query": str,
+             "sections": [section_key, ...]}  (sections empty = whole assessment).
     """
     convo = ""
     for turn in (history or [])[-4:]:
         role = turn.get("role", "user")
         convo += f"{role}: {turn.get('content', '')}\n"
     modes = "single_doc, scoring" + (", corpus" if allow_corpus else "")
+    catalog = section_catalog or []
+    sections_help = ""
+    if catalog:
+        listing = "; ".join(f"{k} ({name})" for k, name in catalog)
+        sections_help = (
+            "If (and only if) mode is `scoring`, also return `sections`: the list of "
+            f"section keys the question is about, each chosen from [{listing}]. "
+            "Use one or more keys when the question targets specific section(s); use [] "
+            "when it concerns the overall score or the whole assessment.\n"
+        )
     system = (
         "You route questions about a scored grant application. Return JSON only.\n"
         "Pick one `mode`:\n"
@@ -109,7 +133,8 @@ def route(question: str, history: list[dict] | None = None, allow_corpus: bool =
         + f"Allowed modes: {modes}.\n"
         "Also return `search_query`: a standalone retrieval query for the question, "
         "resolving any pronouns/follow-ups using the conversation. Keep it concise.\n"
-        'Output: {"mode": "...", "search_query": "..."}'
+        + sections_help
+        + 'Output: {"mode": "...", "search_query": "...", "sections": []}'
     )
     user = (f"Conversation so far:\n{convo}\n" if convo else "") + f"Question: {question}"
     try:
@@ -124,7 +149,12 @@ def route(question: str, history: list[dict] | None = None, allow_corpus: bool =
     if mode == "corpus" and not allow_corpus:
         mode = "single_doc"
     query = (parsed.get("search_query") or question).strip() or question
-    return {"mode": mode, "search_query": query}
+    valid_keys = {k for k, _ in catalog}
+    raw_sections = parsed.get("sections") or []
+    if not isinstance(raw_sections, list):
+        raw_sections = []
+    sections = [s for s in raw_sections if s in valid_keys]
+    return {"mode": mode, "search_query": query, "sections": sections}
 
 
 # ── retrieval helpers ─────────────────────────────────────────────────────────
@@ -221,16 +251,52 @@ def _answer_single_doc(question, search_query, job_id, result, role):
     return {"answer": answer, "mode": "single_doc", "citations": cites}
 
 
-def _format_assessment(result: dict, max_chars: int = 9000) -> tuple[str, list[dict]]:
-    """Compact view of the scored result for scoring-QA, with evidence citations."""
+def _format_assessment(result: dict, *, target_sections: list[str] | None = None,
+                       max_chars: int = 24000, max_cites: int = 8) -> tuple[str, list[dict]]:
+    """Scored-result view for scoring-QA, scoped to the section(s) the question is
+    about (all sections if none given), with deduplicated, capped evidence citations.
+
+    Scoping to the targeted section(s) keeps the relevant assessment inside the
+    context window (the old whole-assessment dump was truncated mid-way, so later
+    sections like Sites and Support were never seen). Citations are deduped by
+    chunk text and reused via a stable [n], so the same chunk isn't listed twice.
+    """
     feats = result.get("features", {}) or {}
     overall = result.get("overall", {}) or {}
+    wanted = set(target_sections or [])
+    selected = [
+        skey for skey in feats
+        if skey != "orcid" and (not wanted or skey in wanted)
+    ]
+
     lines = [f"OVERALL score: {overall.get('final_score_0to100')}/100"]
-    cites, n = [], 0
-    for skey, sec in feats.items():
-        if skey == "orcid":
-            continue
-        lines.append(f"\n## {skey} — section score {sec.get('score_10')}/10")
+    if wanted:
+        lines.append(f"(Assessment scoped to: {', '.join(_SECTION_NAMES.get(s, s) for s in selected)})")
+
+    cites: list[dict] = []
+    cite_by_key: dict[str, int] = {}  # normalized chunk text → citation number
+
+    def _cite(ev: dict) -> int | None:
+        """Dedupe evidence by text; return its [n] (or None if cap reached/new)."""
+        full = (ev.get("text") or "").strip()
+        if not full:
+            return None
+        key = " ".join(full.split()).lower()
+        if key in cite_by_key:
+            return cite_by_key[key]
+        if len(cites) >= max_cites:
+            return None
+        n = len(cites) + 1
+        cite_by_key[key] = n
+        pages = ev.get("pages") or []
+        cites.append({"n": n, "preview": _smart_preview(full), "text": full,
+                      "section": ev.get("section") or "", "pages": pages})
+        return n
+
+    for skey in selected:
+        sec = feats.get(skey, {})
+        name = _SECTION_NAMES.get(skey, skey)
+        lines.append(f"\n## {name} ({skey}) — section score {sec.get('score_10')}/10")
         for sub in sec.get("sub_criteria", []) or []:
             lines.append(f"- {sub.get('sub_id')} {sub.get('name')}: {sub.get('score_10')}/10")
             if sub.get("pros"):
@@ -238,22 +304,26 @@ def _format_assessment(result: dict, max_chars: int = 9000) -> tuple[str, list[d
             if sub.get("drawbacks"):
                 lines.append(f"    weaknesses: {sub['drawbacks']}")
             for ev in (sub.get("evidence") or [])[:2]:
-                n += 1
+                n = _cite(ev)
+                if n is None:
+                    continue
                 pages = ev.get("pages") or []
-                full = (ev.get("text") or "")
                 meta = (ev.get("section") or "") + (f", p.{', '.join(map(str, pages))}" if pages else "")
-                lines.append(f"    [{n}] evidence ({meta}): {full[:200]}")
-                cites.append({"n": n, "preview": _smart_preview(full), "text": full,
-                              "section": ev.get("section") or "", "pages": pages})
+                lines.append(f"    [{n}] evidence ({meta}): {(ev.get('text') or '')[:200]}")
     text = "\n".join(lines)
     return text[:max_chars], cites
 
 
-def _answer_scoring(question, result, role):
-    assessment, cites = _format_assessment(result)
+def _answer_scoring(question, result, role, target_sections=None):
+    assessment, cites = _format_assessment(result, target_sections=target_sections)
+    scope = (
+        "The assessment below is scoped to the section(s) the question is about. "
+        if target_sections else
+        "The assessment below covers all scored sections. "
+    )
     system = (
-        f"You explain an AI grant assessment to a {role}. Use the assessment below "
-        "(section/sub-criterion scores, strengths, weaknesses, and cited evidence) "
+        f"You explain an AI grant assessment to a {role}. {scope}"
+        "Use it (section/sub-criterion scores, strengths, weaknesses, and cited evidence) "
         "to answer why something scored as it did and what the evidence is.\n" + _GROUNDING
     )
     user = f"AI assessment:\n{assessment}\n\nQuestion: {question}"
@@ -300,11 +370,16 @@ def answer_question(result: dict, question: str, *, job_id: str,
     Returns {answer, mode, citations}.
     """
     allow_corpus = role.lower() in CORPUS_ROLES
-    routed = route(question, history, allow_corpus=allow_corpus)
+    section_catalog = [
+        (skey, _SECTION_NAMES.get(skey, skey))
+        for skey in (result.get("features") or {})
+        if skey != "orcid"
+    ]
+    routed = route(question, history, allow_corpus=allow_corpus, section_catalog=section_catalog)
     mode = routed["mode"]
     sq = routed["search_query"]
     if mode == "scoring":
-        return _answer_scoring(question, result, role)
+        return _answer_scoring(question, result, role, target_sections=routed.get("sections"))
     if mode == "corpus":
         return _answer_corpus(question, sq, result, role)
     return _answer_single_doc(question, sq, job_id, result, role)
